@@ -25,7 +25,11 @@ class MainWindow : Application() {
     private val modrinthAPI = ModrinthAPI()
     private val modManager = ModManager(versionManager, modrinthAPI)
     private val nexusSwitch = NexusSwitch(versionManager)
-    private val discordRPC = DiscordRPCManager()
+    private val discordRPC = DiscordRPCManager(
+        // Set NEXUS_DISCORD_APP_ID env var or replace with your Discord application ID.
+        // Register at https://discord.com/developers/applications
+        applicationId = System.getenv("NEXUS_DISCORD_APP_ID") ?: "0"
+    )
     private val autoUpdater = AutoUpdater()
 
     internal var currentProfile: MinecraftProfile? = null

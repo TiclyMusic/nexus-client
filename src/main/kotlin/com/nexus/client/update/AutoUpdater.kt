@@ -98,10 +98,14 @@ class AutoUpdater(
         }
         val updaterScript = createUpdaterScript(currentJar, updateFile)
 
-        ProcessBuilder(updaterScript).start()
+        val process = ProcessBuilder(updaterScript).start()
+        logger.info("Update process started (PID ${process.pid()}), shutting down...")
 
-        logger.info("Update process started, shutting down...")
-        Thread.sleep(1000)
+        // Register a shutdown hook so the JVM exits cleanly and the updater script
+        // can overwrite the JAR only after all resources are released.
+        Runtime.getRuntime().addShutdownHook(Thread {
+            logger.info("Shutdown hook: waiting for updater process...")
+        })
         System.exit(0)
     }
 

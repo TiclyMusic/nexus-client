@@ -59,4 +59,16 @@ The Nexus Switch allows you to quickly toggle between two mod profiles:
 Requires Discord to be running on your machine. The launcher will automatically
 connect to Discord's IPC socket.
 
-## Original
+> **Platform note**: Discord Rich Presence via Unix socket is supported on **Linux** and
+> **macOS**. Windows uses named pipes which require native library support (not included
+> in this build). A valid Discord application ID must be provided via the
+> `DiscordRPCManager` constructor — register your app at
+> <https://discord.com/developers/applications>.
+
+## Configuration
+
+| Setting | Default | Description |
+|---|---|---|
+| Discord App ID | — | Required. Set in `DiscordRPCManager` constructor |
+| Nexus directory | `~/.nexus-client` | Per-OS default; customizable via `VersionManager` |
+| RAM allocation | 2048 MB | Adjustable in the Settings slider |

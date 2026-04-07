@@ -25,13 +25,22 @@ data class RichPresence(
 )
 
 class DiscordRPCManager(
-    // Replace with a valid Discord application ID from https://discord.com/developers/applications
-    private val applicationId: String = "1234567890123456789"
+    // Provide a valid Discord application ID from https://discord.com/developers/applications
+    private val applicationId: String
 ) {
     private val logger = LoggerFactory.getLogger(DiscordRPCManager::class.java)
     private val gson = Gson()
     private var connected = false
     private var channel: SocketChannel? = null
+
+    init {
+        require(applicationId.isNotBlank()) {
+            "Discord application ID must not be blank. Register your app at https://discord.com/developers/applications"
+        }
+        if (applicationId == "0") {
+            logger.warn("Discord application ID is not configured. Set NEXUS_DISCORD_APP_ID to enable Rich Presence.")
+        }
+    }
 
     fun connect(): Boolean {
         return try {
@@ -163,7 +172,14 @@ class DiscordRPCManager(
     private fun findDiscordSocket(): Path? {
         val os = System.getProperty("os.name").lowercase()
         val candidates: List<Path> = when {
-            os.contains("win") -> return null // Named pipes require a different API on Windows
+            os.contains("win") -> {
+                // Windows Discord IPC uses named pipes (\\.\pipe\discord-ipc-N).
+                // Named pipes are not accessible via Java's UnixDomainSocketAddress; native
+                // support (JNA or a dedicated library) is required. Discord RPC is therefore
+                // unavailable on Windows in this build. See README for details.
+                logger.info("Discord RPC via Unix socket is not supported on Windows")
+                return null
+            }
             os.contains("mac") -> listOf(
                 Paths.get(
                     System.getProperty("user.home"),
