@@ -89,7 +89,13 @@ class AutoUpdater(
     }
 
     fun applyUpdate(updateFile: File) {
-        val currentJar = File(AutoUpdater::class.java.protectionDomain.codeSource.location.toURI())
+        val currentJar = try {
+            File(AutoUpdater::class.java.protectionDomain?.codeSource?.location?.toURI()
+                ?: throw IllegalStateException("Cannot determine current JAR location"))
+        } catch (e: Exception) {
+            logger.error("Cannot determine current JAR location for update: ${e.message}")
+            return
+        }
         val updaterScript = createUpdaterScript(currentJar, updateFile)
 
         ProcessBuilder(updaterScript).start()

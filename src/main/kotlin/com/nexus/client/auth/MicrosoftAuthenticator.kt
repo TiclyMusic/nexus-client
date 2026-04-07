@@ -18,7 +18,8 @@ class MicrosoftAuthenticator {
     private val client = OkHttpClient()
     private val gson = Gson()
 
-    // Microsoft Azure App Client ID (public Minecraft launcher client id)
+    // Public Minecraft launcher client ID used by the official Minecraft launcher.
+    // Replace with your own Azure app registration for production use.
     private val clientId = "00000000402b5328"
     private val redirectUri = "https://login.live.com/oauth20_desktop.srf"
 

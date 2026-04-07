@@ -25,6 +25,7 @@ data class RichPresence(
 )
 
 class DiscordRPCManager(
+    // Replace with a valid Discord application ID from https://discord.com/developers/applications
     private val applicationId: String = "1234567890123456789"
 ) {
     private val logger = LoggerFactory.getLogger(DiscordRPCManager::class.java)
