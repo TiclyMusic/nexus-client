@@ -28,7 +28,7 @@ class MainWindow : Application() {
     private val discordRPC = DiscordRPCManager(
         // Set NEXUS_DISCORD_APP_ID env var or replace with your Discord application ID.
         // Register at https://discord.com/developers/applications
-        applicationId = System.getenv("NEXUS_DISCORD_APP_ID") ?: "0"
+        applicationId = System.getenv("NEXUS_DISCORD_APP_ID") ?: DiscordRPCManager.UNCONFIGURED_ID
     )
     private val autoUpdater = AutoUpdater()
 

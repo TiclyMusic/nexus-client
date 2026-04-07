@@ -95,7 +95,8 @@ class ModsTab(
                 Platform.runLater {
                     results.hits.forEach { mod ->
                         resultsList.items.add(
-                            "${mod.title} — ${mod.description.take(60)}... [↓${mod.downloads}]"
+                            val desc = if (mod.description.length > 60) mod.description.take(60) + "..." else mod.description
+                            "${mod.title} — $desc [↓${mod.downloads}]"
                         )
                     }
                     installBtn.isDisable = results.hits.isEmpty()
