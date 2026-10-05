@@ -42,7 +42,7 @@
   <link rel="preconnect" href="https://api.github.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400;8..144,500;8..144,700;8..144,900&display=swap" rel="stylesheet" />
   <!-- Solo le icone usate nella pagina (molto più leggero del font completo) -->
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@24,500,1&icon_names=auto_awesome,bolt,deployed_code,desktop_windows,download,expand_more,extension,group,install_desktop,inventory_2,laptop_mac,new_releases,palette,public,shield,smart_toy,terminal,verified_user&display=block" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@24,500,1&icon_names=auto_awesome,bolt,check,content_copy,deployed_code,desktop_windows,download,error,expand_more,extension,group,install_desktop,inventory_2,laptop_mac,new_releases,palette,public,shield,smart_toy,terminal,verified_user&display=block" rel="stylesheet" />
 
   <script type="application/ld+json">
   {
@@ -100,7 +100,7 @@
           { "@type": "Question", "name": "Come installo le mod?", "acceptedAnswer": { "@type": "Answer", "text": "Dalla sezione Esplora cerchi mod, shader, resource pack e modpack su Modrinth e li installi con un clic: le dipendenze vengono aggiunte in automatico." } },
           { "@type": "Question", "name": "Posso giocare con gli amici senza aprire le porte del router?", "acceptedAnswer": { "@type": "Answer", "text": "Sì. Apri il mondo in LAN e avvia il tunnel di Nexus: ottieni un indirizzo pubblico da dare agli amici, che entrano da qualsiasi rete. Nel tab Amici vedi chi è online e a cosa sta giocando." } },
           { "@type": "Question", "name": "Windows mostra \"Windows ha protetto il PC\": è normale?", "acceptedAnswer": { "@type": "Answer", "text": "Sì, succede con le app nuove non ancora firmate digitalmente. Clicca su Ulteriori informazioni e poi su Esegui comunque." } },
-          { "@type": "Question", "name": "Funziona su Mac o Linux?", "acceptedAnswer": { "@type": "Answer", "text": "Sì. Nexus Launcher è disponibile per Windows 10 e 11, per macOS 10.15 o successivo (Intel e Apple Silicon) e per Linux in formato AppImage, deb e rpm." } }
+          { "@type": "Question", "name": "Funziona su Mac o Linux?", "acceptedAnswer": { "@type": "Answer", "text": "Sì. Nexus Launcher è disponibile per Windows 10 e 11, per macOS 10.15 o successivo (Intel e Apple Silicon) e per Linux in formato AppImage, deb, rpm e pacchetto pacman per Arch Linux." } }
         ]
       }
     ]
@@ -228,6 +228,11 @@
     .plat h3 { display: flex; align-items: center; gap: 8px; font-size: 18px; margin: 2px 4px 4px; }
     .plat h3 .icon { color: var(--primary); }
     .opt.unavailable { opacity: .45; pointer-events: none; }
+    .arch { display: flex; flex-direction: column; gap: 6px; }
+    .cmd { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--outline-variant); }
+    .cmd code { flex: 1; min-width: 0; font: 12px/1.5 ui-monospace, "Cascadia Code", Consolas, monospace; color: var(--on-surface-variant); overflow-wrap: anywhere; }
+    .copy { flex-shrink: 0; display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 10px; background: var(--surface-highest); color: var(--on-surface); cursor: pointer; }
+    .copy:hover { background: var(--primary-container); color: var(--on-primary-container); }
     .notes { max-width: 1000px; margin: 22px auto 0; display: grid; gap: 8px; }
     .notes .note { margin: 0; max-width: none; }
     .note code { font-size: 13px; background: var(--surface-high); padding: 1px 6px; border-radius: 6px; }
@@ -372,12 +377,22 @@
                 <span class="icon" aria-hidden="true">inventory_2</span>
                 <span><b>.rpm</b><span class="d">Fedora, openSUSE</span></span>
               </a>
+              <div class="arch">
+                <a class="opt" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.pkg.tar.zst" data-file="linux.pacman">
+                  <span class="icon" aria-hidden="true">inventory_2</span>
+                  <span><b>Arch Linux (pacman)</b><span class="d">Arch, Manjaro, EndeavourOS</span></span>
+                </a>
+                <div class="cmd">
+                  <code id="arch-cmd">curl -LO https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.pkg.tar.zst && sudo pacman -U nexus-launcher.pkg.tar.zst</code>
+                  <button type="button" class="copy" data-copy="arch-cmd" aria-label="Copia il comando per Arch Linux"><span class="icon" aria-hidden="true">content_copy</span></button>
+                </div>
+              </div>
             </div>
           </div>
           <div class="notes">
             <p class="note"><span class="icon" aria-hidden="true">shield</span><span><b>Windows:</b> se compare "Windows ha protetto il PC", clicca <b>Ulteriori informazioni → Esegui comunque</b>.</span></p>
             <p class="note"><span class="icon" aria-hidden="true">shield</span><span><b>macOS:</b> trascina Nexus in Applicazioni. Se al primo avvio macOS lo blocca, vai in <b>Impostazioni di Sistema → Privacy e sicurezza → Apri comunque</b>.</span></p>
-            <p class="note"><span class="icon" aria-hidden="true">shield</span><span><b>Linux:</b> rendi eseguibile l'AppImage (<code>chmod +x nexus-launcher.AppImage</code>) e avvialo.</span></p>
+            <p class="note"><span class="icon" aria-hidden="true">shield</span><span><b>Linux:</b> rendi eseguibile l'AppImage (<code>chmod +x nexus-launcher.AppImage</code>) e avvialo. Su <b>Arch</b> basta il comando qui sopra.</span></p>
           </div>
         </div>
       </div>
@@ -408,7 +423,7 @@
           <details class="reveal"><summary>Come installo le mod?<span class="icon" aria-hidden="true">expand_more</span></summary><p>Dalla sezione Esplora cerchi mod, shader, resource pack e modpack su Modrinth e li installi con un clic: le dipendenze vengono aggiunte in automatico.</p></details>
           <details class="reveal"><summary>Posso giocare con gli amici senza aprire le porte del router?<span class="icon" aria-hidden="true">expand_more</span></summary><p>Sì. Apri il mondo in LAN e avvia il tunnel di Nexus: ottieni un indirizzo pubblico da dare agli amici, che entrano da qualsiasi rete. Nel tab Amici vedi chi è online e a cosa sta giocando.</p></details>
           <details class="reveal"><summary>Windows mostra "Windows ha protetto il PC": è normale?<span class="icon" aria-hidden="true">expand_more</span></summary><p>Sì, succede con le app nuove non ancora firmate digitalmente. Clicca su Ulteriori informazioni e poi su Esegui comunque.</p></details>
-          <details class="reveal"><summary>Funziona su Mac o Linux?<span class="icon" aria-hidden="true">expand_more</span></summary><p>Sì. Nexus Launcher è disponibile per Windows 10 e 11, per macOS 10.15 o successivo (Intel e Apple Silicon) e per Linux in formato AppImage, deb e rpm.</p></details>
+          <details class="reveal"><summary>Funziona su Mac o Linux?<span class="icon" aria-hidden="true">expand_more</span></summary><p>Sì. Nexus Launcher è disponibile per Windows 10 e 11, per macOS 10.15 o successivo (Intel e Apple Silicon) e per Linux in formato AppImage, deb, rpm e pacchetto pacman per Arch Linux.</p></details>
         </div>
       </div>
     </section>
@@ -450,11 +465,25 @@
     heroBtn.href = document.querySelector(`[data-file="${PRIMARY[os]}"]`).href;
     document.getElementById("hero-dl-label").textContent = `Scarica gratis per ${OS_LABEL[os]}`;
 
+    document.querySelectorAll(".copy").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const icon = btn.querySelector(".icon");
+        try {
+          await navigator.clipboard.writeText(document.getElementById(btn.dataset.copy).textContent);
+          icon.textContent = "check";
+        } catch {
+          icon.textContent = "error";
+        }
+        setTimeout(() => (icon.textContent = "content_copy"), 1800);
+      });
+    });
+
     // Versione e dimensioni dall'ultima GitHub Release (API pubblica, nessun token).
     const FILES = {
       "windows.exe": "nexus-launcher-setup.exe", "windows.msi": "nexus-launcher.msi",
       "macos.dmg": "nexus-launcher.dmg",
       "linux.appimage": "nexus-launcher.AppImage", "linux.deb": "nexus-launcher.deb", "linux.rpm": "nexus-launcher.rpm",
+      "linux.pacman": "nexus-launcher.pkg.tar.zst",
     };
     const mb = (b) => (b / 1048576).toFixed(1) + " MB";
     fetch("https://api.github.com/repos/matthias-peterlini/Nexus-client/releases/latest", { headers: { Accept: "application/vnd.github+json" } })

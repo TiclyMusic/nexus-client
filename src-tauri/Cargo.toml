@@ -1,6 +1,6 @@
 [package]
 name = "nexus-launcher"
-version = "0.2.1"
+version = "0.2.2"
 description = "Nexus Launcher — launcher Minecraft open-source"
 authors = ["Nexus Launcher contributors"]
 license = "GPL-3.0-or-later"

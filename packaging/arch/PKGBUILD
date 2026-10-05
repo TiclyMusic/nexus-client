@@ -1,0 +1,30 @@
+# Pacchetto Arch Linux di Nexus Launcher, ricavato dal .deb ufficiale della GitHub Release.
+#
+# La CI (.github/workflows/release.yml) lo compila a ogni release e allega
+# nexus-launcher.pkg.tar.zst, installabile con:
+#   curl -LO https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.pkg.tar.zst
+#   sudo pacman -U nexus-launcher.pkg.tar.zst
+#
+# Uso manuale: `makepkg -si` in questa cartella. Per pubblicarlo su AUR come nexus-launcher-bin
+# aggiorna pkgver, esegui `updpkgsums` e genera .SRCINFO con `makepkg --printsrcinfo > .SRCINFO`.
+pkgname=nexus-launcher-bin
+pkgver=0.2.2
+pkgrel=1
+pkgdesc="Launcher per Minecraft: Java Edition con mod Modrinth, amici online e Copilot AI"
+arch=('x86_64')
+url="https://nexusmc.online"
+license=('GPL-3.0-or-later')
+depends=('webkit2gtk-4.1' 'gtk3')
+optdepends=('gnome-keyring: salva in modo sicuro il login Microsoft (in alternativa KWallet o KeePassXC)')
+provides=('nexus-launcher')
+conflicts=('nexus-launcher')
+options=('!strip' '!debug')
+source=("nexus-launcher-${pkgver}.deb::https://github.com/matthias-peterlini/Nexus-client/releases/download/v${pkgver}/nexus-launcher.deb")
+sha256sums=('SKIP')
+
+package() {
+  # makepkg ha già estratto il .deb (archivio ar): il contenuto è in data.tar.*
+  bsdtar -xf data.tar.* -C "$pkgdir"
+  # nome del file .desktop senza spazi, come da convenzione
+  mv "$pkgdir/usr/share/applications/Nexus Launcher.desktop" "$pkgdir/usr/share/applications/nexus-launcher.desktop"
+}

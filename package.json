@@ -1,7 +1,7 @@
 {
   "name": "nexus-launcher",
   "private": true,
-  "version": "0.2.1",
+  "version": "0.2.2",
   "type": "module",
   "description": "Nexus Launcher — launcher Minecraft open-source in Tauri v2 + React con UI Material 3 Expressive",
   "license": "GPL-3.0-or-later",

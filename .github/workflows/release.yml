@@ -1,5 +1,5 @@
 # Compila Nexus Launcher per Windows, macOS (DMG universale Intel + Apple Silicon) e Linux
-# (AppImage, deb, rpm) e crea la GitHub Release con gli installer: https://nexusmc.online
+# (AppImage, deb, rpm, pacchetto pacman per Arch) e crea la GitHub Release con gli installer: https://nexusmc.online
 # linka https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/<file>.
 #
 # Avvio: push di un tag `v*` (es. `git tag v0.3.0 && git push origin v0.3.0`) oppure
@@ -92,8 +92,44 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  publish:
+  # Pacchetto pacman per Arch Linux, ricavato dal .deb con packaging/arch/PKGBUILD.
+  arch:
     needs: build
+    runs-on: ubuntu-22.04
+    container: archlinux:base-devel
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: installer-linux
+          path: linux
+
+      - name: makepkg
+        run: |
+          ver=$(grep -m1 '"version"' src-tauri/tauri.conf.json | sed -E 's/.*"version": *"([^"]+)".*/\1/')
+          useradd -m builder
+          mkdir -p /tmp/pkg
+          cp packaging/arch/PKGBUILD /tmp/pkg/
+          sed -i "s/^pkgver=.*/pkgver=$ver/" /tmp/pkg/PKGBUILD
+          # stesso nome della source del PKGBUILD: makepkg usa il file locale invece di scaricarlo
+          cp linux/nexus-launcher.deb "/tmp/pkg/nexus-launcher-$ver.deb"
+          chown -R builder /tmp/pkg
+          # --nodeps: per impacchettare non servono webkit2gtk e gtk3 installati
+          su builder -c "cd /tmp/pkg && makepkg --nodeps --noconfirm"
+          mkdir -p out
+          cp /tmp/pkg/nexus-launcher-bin-*.pkg.tar.zst out/nexus-launcher.pkg.tar.zst
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer-arch
+          path: out/*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    needs: [build, arch]
     if: github.event_name == 'push' || inputs.publish
     runs-on: ubuntu-22.04
     permissions:
@@ -127,4 +163,5 @@ jobs:
             | Windows 10/11 | `nexus-launcher-setup.exe` (consigliato) · `nexus-launcher.msi` |
             | macOS 10.15+ (Intel e Apple Silicon) | `nexus-launcher.dmg` |
             | Linux | `nexus-launcher.AppImage` · `nexus-launcher.deb` · `nexus-launcher.rpm` |
+            | Arch Linux | `nexus-launcher.pkg.tar.zst` → `sudo pacman -U nexus-launcher.pkg.tar.zst` |
           files: dist/*
