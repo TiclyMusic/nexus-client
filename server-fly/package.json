@@ -1,0 +1,8 @@
+{
+  "name": "nexus-social",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": { "start": "node index.js" },
+  "dependencies": { "better-sqlite3": "^11.8.1" }
+}

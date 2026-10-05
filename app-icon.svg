@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1f6b35"/>
+      <stop offset="1" stop-color="#0e3f4a"/>
+    </linearGradient>
+    <linearGradient id="top" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b6f5a9"/>
+      <stop offset="1" stop-color="#6fd48a"/>
+    </linearGradient>
+  </defs>
+  <!-- forma organica "squircle" M3 Expressive -->
+  <path fill="url(#bg)" d="M512 40c236 0 330 34 400 104s104 164 104 368-34 298-104 368-164 104-400 104-298-34-368-104S40 748 40 512s34-298 104-368S276 40 512 40z"/>
+  <!-- blocco isometrico -->
+  <g transform="translate(512 540)">
+    <path fill="url(#top)" d="M0-300 260-150 0 0-260-150z"/>
+    <path fill="#3aa35a" d="M-260-150 0 0v300l-260-150z"/>
+    <path fill="#1c7a42" d="M260-150 0 0v300l260-150z"/>
+    <path fill="#e9ffe3" opacity=".9" d="M0-230 60-195 0-160-60-195z"/>
+  </g>
+</svg>

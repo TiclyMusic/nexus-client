@@ -1,0 +1,280 @@
+@import "tailwindcss";
+
+/* -------------------------------------------------------------------------
+   Material 3 Expressive — design tokens
+   I colori --md-* vengono generati a runtime da src/lib/theme.ts
+   (palette dinamica Material You a partire da un colore seed).
+   ------------------------------------------------------------------------- */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-primary: var(--md-primary);
+  --color-on-primary: var(--md-on-primary);
+  --color-primary-container: var(--md-primary-container);
+  --color-on-primary-container: var(--md-on-primary-container);
+  --color-secondary: var(--md-secondary);
+  --color-on-secondary: var(--md-on-secondary);
+  --color-secondary-container: var(--md-secondary-container);
+  --color-on-secondary-container: var(--md-on-secondary-container);
+  --color-tertiary: var(--md-tertiary);
+  --color-on-tertiary: var(--md-on-tertiary);
+  --color-tertiary-container: var(--md-tertiary-container);
+  --color-on-tertiary-container: var(--md-on-tertiary-container);
+  --color-error: var(--md-error);
+  --color-on-error: var(--md-on-error);
+  --color-error-container: var(--md-error-container);
+  --color-on-error-container: var(--md-on-error-container);
+  --color-surface: var(--md-surface);
+  --color-surface-dim: var(--md-surface-dim);
+  --color-surface-bright: var(--md-surface-bright);
+  --color-surface-container-lowest: var(--md-surface-container-lowest);
+  --color-surface-container-low: var(--md-surface-container-low);
+  --color-surface-container: var(--md-surface-container);
+  --color-surface-container-high: var(--md-surface-container-high);
+  --color-surface-container-highest: var(--md-surface-container-highest);
+  --color-on-surface: var(--md-on-surface);
+  --color-surface-variant: var(--md-surface-variant);
+  --color-on-surface-variant: var(--md-on-surface-variant);
+  --color-outline: var(--md-outline);
+  --color-outline-variant: var(--md-outline-variant);
+  --color-inverse-surface: var(--md-inverse-surface);
+  --color-inverse-on-surface: var(--md-inverse-on-surface);
+  --color-inverse-primary: var(--md-inverse-primary);
+  --color-scrim: var(--md-scrim);
+
+  --font-sans: "Roboto Flex Variable", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", ui-monospace, Consolas, monospace;
+
+  /* Scala di forme M3 Expressive */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+  --radius-3xl: 32px;
+  --radius-4xl: 48px;
+
+  /* Motion: curve "expressive" e spring */
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized-decel: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-spring: cubic-bezier(0.34, 1.45, 0.64, 1);
+
+  --animate-enter: enter 420ms var(--ease-emphasized-decel) both;
+  --animate-pop: pop 480ms var(--ease-spring) both;
+  --animate-slide-up: slide-up 380ms var(--ease-emphasized-decel) both;
+  --animate-fade: fade 220ms ease-out both;
+}
+
+@keyframes enter {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pop {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes wave {
+  to { transform: translateX(-24px); }
+}
+@keyframes indeterminate {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(290%); }
+}
+@keyframes spin-morph {
+  0% { transform: rotate(0deg); border-radius: 42% 58% 60% 40% / 45% 45% 55% 55%; }
+  50% { border-radius: 60% 40% 38% 62% / 55% 60% 40% 45%; }
+  100% { transform: rotate(360deg); border-radius: 42% 58% 60% 40% / 45% 45% 55% 55%; }
+}
+
+/* Valori iniziali (dark, seed verde "creeper") per evitare flash prima del tema dinamico */
+:root {
+  color-scheme: dark;
+  --md-primary: #8bd88e;
+  --md-on-primary: #00390f;
+  --md-primary-container: #0d5220;
+  --md-on-primary-container: #a6f5a8;
+  --md-secondary: #b8ccb4;
+  --md-on-secondary: #243424;
+  --md-secondary-container: #3a4b39;
+  --md-on-secondary-container: #d4e8cf;
+  --md-tertiary: #a1ced7;
+  --md-on-tertiary: #00363d;
+  --md-tertiary-container: #1f4d55;
+  --md-on-tertiary-container: #bdeaf4;
+  --md-error: #ffb4ab;
+  --md-on-error: #690005;
+  --md-error-container: #93000a;
+  --md-on-error-container: #ffdad6;
+  --md-surface: #101510;
+  --md-surface-dim: #101510;
+  --md-surface-bright: #363a35;
+  --md-surface-container-lowest: #0b0f0b;
+  --md-surface-container-low: #181d18;
+  --md-surface-container: #1c211c;
+  --md-surface-container-high: #272b26;
+  --md-surface-container-highest: #313630;
+  --md-on-surface: #e0e4dc;
+  --md-surface-variant: #424940;
+  --md-on-surface-variant: #c2c9bd;
+  --md-outline: #8c9388;
+  --md-outline-variant: #424940;
+  --md-inverse-surface: #e0e4dc;
+  --md-inverse-on-surface: #2d322c;
+  --md-inverse-primary: #2a6b35;
+  --md-scrim: #000000;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--md-surface);
+  color: var(--md-on-surface);
+  font-family: var(--font-sans);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  overflow: hidden;
+}
+
+input,
+textarea,
+.selectable {
+  user-select: text;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--md-primary) 35%, transparent);
+}
+
+/* Scrollbar sottili in stile M3 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--md-outline-variant) transparent;
+}
+
+/* -------------------------------------------------------------------------
+   Utility M3
+   ------------------------------------------------------------------------- */
+
+/* State layer: overlay del colore del contenuto a 8% hover / 12% pressed */
+@utility state-layer {
+  position: relative;
+  isolation: isolate;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: currentColor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms var(--ease-emphasized);
+  }
+  &:hover::after {
+    opacity: 0.08;
+  }
+  &:active::after,
+  &:focus-visible::after {
+    opacity: 0.12;
+  }
+}
+
+@utility elev-1 {
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 1px 3px 1px rgb(0 0 0 / 0.15);
+}
+@utility elev-2 {
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 6px 2px rgb(0 0 0 / 0.15);
+}
+@utility elev-3 {
+  box-shadow: 0 4px 8px 3px rgb(0 0 0 / 0.15), 0 1px 3px rgb(0 0 0 / 0.3);
+}
+@utility elev-4 {
+  box-shadow: 0 6px 10px 4px rgb(0 0 0 / 0.15), 0 2px 3px rgb(0 0 0 / 0.3);
+}
+
+/* Tipografia M3 */
+@utility type-display {
+  font-size: 44px;
+  line-height: 52px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+  font-variation-settings: "wdth" 110, "GRAD" 50;
+}
+@utility type-headline {
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 500;
+  font-variation-settings: "wdth" 105;
+}
+@utility type-title {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 500;
+}
+@utility type-label {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+@utility drag-region {
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+/* Material Symbols con asse FILL animabile */
+.material-symbols-rounded {
+  font-variation-settings: "FILL" 0, "wght" 450, "GRAD" 0, "opsz" 24;
+  transition: font-variation-settings 220ms var(--ease-emphasized);
+  line-height: 1;
+}
+.material-symbols-rounded.filled {
+  font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24;
+}
+
+/* Markdown nella chat AI */
+.prose-chat p { margin: 0.35em 0; }
+.prose-chat ul, .prose-chat ol { margin: 0.35em 0; padding-left: 1.3em; }
+.prose-chat ul { list-style: disc; }
+.prose-chat ol { list-style: decimal; }
+.prose-chat code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  background: var(--md-surface-container-highest);
+  padding: 0.1em 0.35em;
+  border-radius: 6px;
+}
+.prose-chat pre {
+  background: var(--md-surface-container-lowest);
+  padding: 10px 12px;
+  border-radius: 12px;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+.prose-chat pre code { background: none; padding: 0; }
+.prose-chat a { color: var(--md-primary); text-decoration: underline; }
+.prose-chat strong { font-weight: 650; }
+.prose-chat h1, .prose-chat h2, .prose-chat h3 { font-weight: 600; margin: 0.6em 0 0.3em; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}

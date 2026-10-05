@@ -1,18 +1,26 @@
-# Build
-build/
-.gradle/
-*.jar
-!gradle/wrapper/gradle-wrapper.jar
-
-# IDE
+node_modules/
+dist/
+*.local
+.vscode/*
+!.vscode/extensions.json
 .idea/
-*.iml
-.vscode/
-*.class
-
-# OS
 .DS_Store
-Thumbs.db
+*.log
 
-# Nexus runtime data
-.nexus-client/
+# Tauri / Rust
+src-tauri/target/
+src-tauri/target-old/
+src-tauri/gen/schemas/
+
+# sito: installer generati da site/deploy.ps1 o dalla CI (il video in site/cdn/media è versionato)
+site/cdn/download/
+.wrangler/
+
+# progetto Remotion del video promo: ha un suo repository git separato
+promo-video/
+
+# backup locale
+tsconfig.tsbuildinfo
+
+# archivi locali (es. upload manuale su Netlify)
+site/*.zip

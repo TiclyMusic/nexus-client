@@ -1,0 +1,79 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Nexus Launcher",
+  "version": "0.2.1",
+  "identifier": "dev.nexus.launcher",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "label": "main",
+        "title": "Nexus Launcher",
+        "width": 1320,
+        "height": 820,
+        "minWidth": 980,
+        "minHeight": 640,
+        "center": true,
+        "resizable": true,
+        "decorations": false,
+        "shadow": true,
+        "backgroundColor": "#131316"
+      }
+    ],
+    "security": {
+      "csp": {
+        "default-src": "'self'",
+        "script-src": "'self' https://js.puter.com https://*.puter.com",
+        "style-src": "'self' 'unsafe-inline'",
+        "font-src": "'self' data:",
+        "img-src": "'self' data: blob: https:",
+        "connect-src": "'self' ipc: http://ipc.localhost https://*.puter.com https://api.puter.com wss://*.puter.com",
+        "frame-src": "https://puter.com https://*.puter.com"
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "msi", "appimage", "deb", "rpm", "app", "dmg"],
+    "category": "Game",
+    "publisher": "Nexus Launcher contributors",
+    "copyright": "GPL-3.0-or-later",
+    "shortDescription": "Launcher Minecraft moderno con mod manager e AI copilot",
+    "longDescription": "Nexus Launcher è un launcher Minecraft open-source: istanze isolate, Fabric/Quilt/Forge/NeoForge, mod browser Modrinth e un assistente AI per configurare e riparare le istanze.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "webviewInstallMode": { "type": "downloadBootstrapper" },
+      "nsis": {
+        "installMode": "currentUser",
+        "installerIcon": "icons/icon.ico",
+        "languages": ["Italian", "English"],
+        "displayLanguageSelector": true
+      }
+    },
+    "macOS": {
+      "minimumSystemVersion": "10.15",
+      "signingIdentity": "-",
+      "dmg": {
+        "appPosition": { "x": 180, "y": 170 },
+        "applicationFolderPosition": { "x": 480, "y": 170 }
+      }
+    },
+    "linux": {
+      "appimage": { "bundleMediaFramework": false },
+      "deb": { "section": "games" },
+      "rpm": { "release": "1" }
+    }
+  }
+}

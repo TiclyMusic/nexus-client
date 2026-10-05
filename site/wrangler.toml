@@ -1,0 +1,11 @@
+# Hosting dei file pesanti di nexusmc.online (installer, video, latest.json) su Cloudflare
+# Workers Static Assets: banda gratuita. La pagina (cartella public/) è su Netlify.
+# Deploy: dalla cartella site/ esegui `./deploy.ps1` (copia l'installer più recente e pubblica).
+name = "nexus-site"
+compatibility_date = "2024-11-01"
+# Account Cloudflare personale → https://nexus-site.matthias-peterlini.workers.dev
+account_id = "fdd8b5348ae948cc89bcbd8c896d3082"
+workers_dev = true
+
+[assets]
+directory = "./cdn"

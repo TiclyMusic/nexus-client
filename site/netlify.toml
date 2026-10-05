@@ -1,0 +1,4 @@
+# Netlify: imposta "Base directory" = site (oppure trascina la cartella site/public su Netlify).
+# Pagina statica, nessuna build. Installer e video sono serviti da Cloudflare (vedi index.html).
+[build]
+  publish = "public"

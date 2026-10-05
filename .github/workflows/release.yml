@@ -1,0 +1,124 @@
+# Compila Nexus Launcher per Windows, macOS (DMG universale Intel + Apple Silicon) e Linux
+# (AppImage, deb, rpm) e pubblica gli installer su Cloudflare (https://nexusmc.online li linka).
+#
+# Avvio: push di un tag `v*` (es. `git tag v0.3.0 && git push origin v0.3.0`) oppure
+# manualmente da "Actions → release → Run workflow".
+# La pubblicazione richiede il secret CLOUDFLARE_API_TOKEN (Settings → Secrets → Actions);
+# senza, gli installer restano scaricabili come artifact della run.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Pubblica su nexusmc.online al termine"
+        type: boolean
+        default: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-latest
+            name: windows
+          - platform: ubuntu-22.04
+            name: linux
+          - platform: macos-latest
+            name: macos
+            args: --target universal-apple-darwin
+    runs-on: ${{ matrix.platform }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dipendenze di sistema (Linux)
+        if: matrix.name == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libdbus-1-dev pkg-config libssl-dev rpm
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.name == 'macos' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+          key: ${{ matrix.name }}
+
+      - run: npm ci
+
+      - name: Test backend
+        if: matrix.name == 'linux'
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Build
+        env:
+          # linuxdeploy (AppImage) fallisce a fare lo strip delle librerie recenti di Ubuntu
+          NO_STRIP: "true"
+        run: npx tauri build ${{ matrix.args }}
+
+      - name: Raccogli gli installer (nomi stabili)
+        run: |
+          mkdir -p out
+          B=src-tauri/target/release/bundle
+          case "${{ matrix.name }}" in
+            windows)
+              cp "$B"/nsis/*-setup.exe out/nexus-launcher-setup.exe
+              cp "$B"/msi/*.msi out/nexus-launcher.msi ;;
+            linux)
+              cp "$B"/appimage/*.AppImage out/nexus-launcher.AppImage
+              cp "$B"/deb/*.deb out/nexus-launcher.deb
+              cp "$B"/rpm/*.rpm out/nexus-launcher.rpm ;;
+            macos)
+              cp src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg out/nexus-launcher.dmg ;;
+          esac
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.name }}
+          path: out/*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    needs: build
+    if: github.event_name == 'push' || inputs.publish
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: installer-*
+          merge-multiple: true
+          path: site/cdn/download
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Scrivi latest.json
+        run: node site/scripts/write-latest.mjs
+
+      - name: Pubblica su Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::warning::Secret CLOUDFLARE_API_TOKEN mancante: installer non pubblicati (scaricali dagli artifact della run)."
+            exit 0
+          fi
+          cd site && npx -y wrangler@4 deploy

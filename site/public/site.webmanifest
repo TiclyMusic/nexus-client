@@ -1,0 +1,14 @@
+{
+  "name": "Nexus Launcher",
+  "short_name": "Nexus",
+  "description": "Launcher Minecraft gratis e open-source con mod, amici e Copilot AI.",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#101510",
+  "theme_color": "#101510",
+  "lang": "it",
+  "icons": [
+    { "src": "/img/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/img/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

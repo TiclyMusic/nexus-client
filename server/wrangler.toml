@@ -1,0 +1,12 @@
+name = "nexus-social"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+# Account Cloudflare personale. Il launcher usa l'URL https://nexus-social.matthias-peterlini.workers.dev
+account_id = "fdd8b5348ae948cc89bcbd8c896d3082"
+workers_dev = true
+
+# Database D1 — l'id viene riempito dal comando `wrangler d1 create` (vedi README).
+[[d1_databases]]
+binding = "DB"
+database_name = "nexus-social"
+database_id = "a49141a9-d25a-4ac8-a97a-e959f46467f8"
