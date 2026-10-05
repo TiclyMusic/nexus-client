@@ -39,6 +39,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://nexus-site.matthias-peterlini.workers.dev" crossorigin />
+  <link rel="preconnect" href="https://api.github.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400;8..144,500;8..144,700;8..144,900&display=swap" rel="stylesheet" />
   <!-- Solo le icone usate nella pagina (molto più leggero del font completo) -->
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@24,500,1&icon_names=auto_awesome,bolt,deployed_code,desktop_windows,download,expand_more,extension,group,install_desktop,inventory_2,laptop_mac,new_releases,palette,public,shield,smart_toy,terminal,verified_user&display=block" rel="stylesheet" />
@@ -73,7 +74,7 @@
         "operatingSystem": "Windows 10, Windows 11, macOS 10.15+, Linux",
         "inLanguage": "it-IT",
         "isAccessibleForFree": true,
-        "downloadUrl": "https://nexus-site.matthias-peterlini.workers.dev/download/nexus-launcher-setup.exe",
+        "downloadUrl": "https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher-setup.exe",
         "image": "https://nexusmc.online/img/og.jpg",
         "screenshot": "https://nexusmc.online/img/poster.jpg",
         "featureList": [
@@ -341,33 +342,33 @@
           <div class="platforms">
             <div class="plat" data-os="windows">
               <h3><span class="icon" aria-hidden="true">desktop_windows</span>Windows</h3>
-              <a class="opt primary" href="https://nexus-site.matthias-peterlini.workers.dev/download/nexus-launcher-setup.exe" data-file="windows.exe">
+              <a class="opt primary" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher-setup.exe" data-file="windows.exe">
                 <span class="icon" aria-hidden="true">install_desktop</span>
                 <span><b>Installer (.exe)</b><span class="d">Windows 10/11 · consigliato</span></span>
               </a>
-              <a class="opt" href="https://nexus-site.matthias-peterlini.workers.dev/download/nexus-launcher.msi" data-file="windows.msi">
+              <a class="opt" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.msi" data-file="windows.msi">
                 <span class="icon" aria-hidden="true">inventory_2</span>
                 <span><b>Pacchetto MSI</b><span class="d">Installazioni gestite</span></span>
               </a>
             </div>
             <div class="plat" data-os="macos">
               <h3><span class="icon" aria-hidden="true">laptop_mac</span>macOS</h3>
-              <a class="opt primary" href="https://nexus-site.matthias-peterlini.workers.dev/download/nexus-launcher.dmg" data-file="macos.dmg">
+              <a class="opt primary" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.dmg" data-file="macos.dmg">
                 <span class="icon" aria-hidden="true">install_desktop</span>
                 <span><b>Immagine disco (.dmg)</b><span class="d">macOS 10.15+ · Intel e Apple Silicon</span></span>
               </a>
             </div>
             <div class="plat" data-os="linux">
               <h3><span class="icon" aria-hidden="true">terminal</span>Linux</h3>
-              <a class="opt primary" href="https://nexus-site.matthias-peterlini.workers.dev/download/nexus-launcher.AppImage" data-file="linux.appimage">
+              <a class="opt primary" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.AppImage" data-file="linux.appimage">
                 <span class="icon" aria-hidden="true">install_desktop</span>
                 <span><b>AppImage</b><span class="d">Qualsiasi distribuzione</span></span>
               </a>
-              <a class="opt" href="https://nexus-site.matthias-peterlini.workers.dev/download/nexus-launcher.deb" data-file="linux.deb">
+              <a class="opt" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.deb" data-file="linux.deb">
                 <span class="icon" aria-hidden="true">inventory_2</span>
                 <span><b>.deb</b><span class="d">Ubuntu, Debian, Mint</span></span>
               </a>
-              <a class="opt" href="https://nexus-site.matthias-peterlini.workers.dev/download/nexus-launcher.rpm" data-file="linux.rpm">
+              <a class="opt" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.rpm" data-file="linux.rpm">
                 <span class="icon" aria-hidden="true">inventory_2</span>
                 <span><b>.rpm</b><span class="d">Fedora, openSUSE</span></span>
               </a>
@@ -421,7 +422,6 @@
   </footer>
 
   <script>
-    const CDN = "https://nexus-site.matthias-peterlini.workers.dev";
     document.getElementById("year").textContent = new Date().getFullYear();
 
     const io = new IntersectionObserver((entries) => {
@@ -450,27 +450,32 @@
     heroBtn.href = document.querySelector(`[data-file="${PRIMARY[os]}"]`).href;
     document.getElementById("hero-dl-label").textContent = `Scarica gratis per ${OS_LABEL[os]}`;
 
-    // Versione e dimensioni della release (latest.json scritto dalla CI su Cloudflare)
+    // Versione e dimensioni dall'ultima GitHub Release (API pubblica, nessun token).
+    const FILES = {
+      "windows.exe": "nexus-launcher-setup.exe", "windows.msi": "nexus-launcher.msi",
+      "macos.dmg": "nexus-launcher.dmg",
+      "linux.appimage": "nexus-launcher.AppImage", "linux.deb": "nexus-launcher.deb", "linux.rpm": "nexus-launcher.rpm",
+    };
     const mb = (b) => (b / 1048576).toFixed(1) + " MB";
-    fetch(CDN + "/download/latest.json", { cache: "no-store" })
+    fetch("https://api.github.com/repos/matthias-peterlini/Nexus-client/releases/latest", { headers: { Accept: "application/vnd.github+json" } })
       .then((r) => (r.ok ? r.json() : null))
-      .then((info) => {
-        if (!info) return;
-        document.getElementById("ver-chip").textContent = "Versione " + info.version + " disponibile";
-        document.getElementById("meta").textContent = `v${info.version} · Windows · macOS · Linux · gratis`;
-        const p = info.platforms || { windows: { exe: info.exe, msi: info.msi } };
+      .then((rel) => {
+        if (!rel) return;
+        const version = String(rel.tag_name || "").replace(/^v/, "");
+        const assets = Object.fromEntries((rel.assets || []).map((a) => [a.name, a]));
+        document.getElementById("ver-chip").textContent = "Versione " + version + " disponibile";
+        document.getElementById("meta").textContent = `v${version} · Windows · macOS · Linux · gratis`;
         document.querySelectorAll("[data-file]").forEach((a) => {
-          const [plat, kind] = a.dataset.file.split(".");
-          const f = p[plat]?.[kind];
+          const asset = assets[FILES[a.dataset.file]];
           const d = a.querySelector(".d");
-          if (f) d.textContent += ` · ${mb(f.size)}`;
+          if (asset) d.textContent += ` · ${mb(asset.size)}`;
           else { a.classList.add("unavailable"); a.setAttribute("aria-disabled", "true"); a.tabIndex = -1; d.textContent = "In arrivo"; }
         });
-        if (!p[os]?.[PRIMARY[os].split(".")[1]]) {
+        if (!assets[FILES[PRIMARY[os]]]) {
           heroBtn.href = "#download";
           document.getElementById("hero-dl-label").textContent = "Scarica gratis";
         }
-        if (info.date) document.getElementById("dl-sub").textContent = `v${info.version}, pubblicata il ${new Date(info.date).toLocaleDateString("it-IT")}. Gratis, open-source, nessuna pubblicità.`;
+        if (rel.published_at) document.getElementById("dl-sub").textContent = `v${version}, pubblicata il ${new Date(rel.published_at).toLocaleDateString("it-IT")}. Gratis, open-source, nessuna pubblicità.`;
       })
       .catch(() => {});
   </script>

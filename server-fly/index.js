@@ -11,7 +11,8 @@ import Database from "better-sqlite3";
 const __dir = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 8080;
 const DB_PATH = process.env.DB_PATH || "/data/nexus.db";
-const SESSION_SECRET = process.env.SESSION_SECRET || "nexus-dev-secret-change-me";
+const SESSION_SECRET = process.env.SESSION_SECRET;
+if (!SESSION_SECRET) throw new Error("SESSION_SECRET non configurato: impostalo con `fly secrets set SESSION_SECRET=...`");
 const ONLINE_WINDOW = 70;
 const SESSION_TTL = 60 * 60 * 24 * 30; // 30 giorni
 

@@ -66,9 +66,15 @@ function bearer(req) {
   return h.startsWith("Bearer ") ? h.slice(7).trim() : "";
 }
 
+// Nessuna chiave di riserva: senza SESSION_SECRET (wrangler secret put) chiunque potrebbe
+// firmare sessioni valide, quindi il server si rifiuta di funzionare.
+function sessionSecret(env) {
+  if (!env.SESSION_SECRET) throw new Error("SESSION_SECRET non configurato sul server");
+  return env.SESSION_SECRET;
+}
+
 async function requireUser(req, env) {
-  const secret = env.SESSION_SECRET || "nexus-dev-secret-change-me";
-  return verifySession(secret, bearer(req));
+  return verifySession(sessionSecret(env), bearer(req));
 }
 
 // ---------------------------------------------------------------------------
@@ -109,8 +115,7 @@ async function handleAuth(req, env) {
     .bind(uuid, name, name.toLowerCase(), now())
     .run();
 
-  const secret = env.SESSION_SECRET || "nexus-dev-secret-change-me";
-  const token = await signSession(secret, { uuid, name, exp: now() + SESSION_TTL });
+  const token = await signSession(sessionSecret(env), { uuid, name, exp: now() + SESSION_TTL });
   return json({ token, uuid, name });
 }
 

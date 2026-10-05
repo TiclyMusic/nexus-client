@@ -1,14 +1,17 @@
 # Sito nexusmc.online
 
-Pagina di download di Nexus Launcher, divisa in due parti:
+Pagina di download di Nexus Launcher:
 
-| Cartella | Dove | Contenuto |
-|---|---|---|
-| `public/` | **Netlify** → https://nexusmc.online | Pagina, FAQ, immagini, `robots.txt`, `sitemap.xml`, manifest, chiave IndexNow |
-| `cdn/` | **Cloudflare Workers** (account personale) → https://nexus-site.matthias-peterlini.workers.dev | Installer, video promo, `download/latest.json` (banda gratuita, `noindex`) |
+| Cosa | Dove |
+|---|---|
+| Pagina (`public/`) | **Netlify** → https://nexusmc.online |
+| Installer (Windows, macOS, Linux) | **GitHub Releases** → https://github.com/matthias-peterlini/Nexus-client/releases/latest |
+| Video promo (`cdn/`) | **Cloudflare Workers** (account personale) → https://nexus-site.matthias-peterlini.workers.dev (`noindex`) |
 
-`index.html` linka i file di `cdn/` con URL assoluti e legge versione/dimensioni da `latest.json`,
-quindi la pagina su Netlify si aggiorna da sola a ogni nuova release.
+`index.html` linka `releases/latest/download/<file>` (nomi fissi, puntano sempre all'ultima release)
+e legge versione e dimensioni dall'API pubblica `api.github.com/repos/.../releases/latest`,
+quindi la pagina si aggiorna da sola a ogni nuova release. I vecchi link
+`nexus-site…workers.dev/download/*` vengono reindirizzati alle release (`cdn/_redirects`).
 
 ## Pubblicare una nuova versione del launcher
 
@@ -20,14 +23,9 @@ quindi la pagina su Netlify si aggiorna da sola a ogni nuova release.
    git push origin main v0.3.0
    ```
 
-La CI (`.github/workflows/release.yml`) compila Windows (exe, msi), macOS (dmg universale
-Intel + Apple Silicon) e Linux (AppImage, deb, rpm), scrive `latest.json`
-(`site/scripts/write-latest.mjs`) e pubblica tutto su Cloudflare. Serve il secret GitHub
-`CLOUDFLARE_API_TOKEN` (token Cloudflare con permesso *Workers Scripts: Edit* sull'account personale);
-senza, gli installer restano scaricabili come artifact della run.
-
-`site/deploy.ps1` resta per emergenze (solo Windows, da build locale): si rifiuta di pubblicare se
-mancano i pacchetti Mac/Linux, perché verrebbero rimossi dal sito (`-Force` per farlo comunque).
+La CI (`.github/workflows/release.yml`) compila Windows (`nexus-launcher-setup.exe`, `.msi`),
+macOS (`nexus-launcher.dmg`, universale Intel + Apple Silicon) e Linux (`.AppImage`, `.deb`, `.rpm`)
+e crea la GitHub Release con quei file. Nessun secret richiesto.
 
 ## Pubblicare la pagina (solo se cambi `public/`)
 

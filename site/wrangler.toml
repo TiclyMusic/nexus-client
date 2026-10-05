@@ -1,6 +1,7 @@
-# Hosting dei file pesanti di nexusmc.online (installer, video, latest.json) su Cloudflare
-# Workers Static Assets: banda gratuita. La pagina (cartella public/) è su Netlify.
-# Deploy: dalla cartella site/ esegui `./deploy.ps1` (copia l'installer più recente e pubblica).
+# Hosting del video promo di nexusmc.online su Cloudflare
+# Workers Static Assets (banda gratuita). Gli installer sono su GitHub Releases; i vecchi link
+# /download/* vengono reindirizzati lì (cdn/_redirects). La pagina (public/) è su Netlify.
+# Deploy: `npx wrangler deploy` dalla cartella site/ (solo se cambia il video).
 name = "nexus-site"
 compatibility_date = "2024-11-01"
 # Account Cloudflare personale → https://nexus-site.matthias-peterlini.workers.dev

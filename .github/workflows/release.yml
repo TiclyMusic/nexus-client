@@ -1,10 +1,9 @@
 # Compila Nexus Launcher per Windows, macOS (DMG universale Intel + Apple Silicon) e Linux
-# (AppImage, deb, rpm) e pubblica gli installer su Cloudflare (https://nexusmc.online li linka).
+# (AppImage, deb, rpm) e crea la GitHub Release con gli installer: https://nexusmc.online
+# linka https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/<file>.
 #
 # Avvio: push di un tag `v*` (es. `git tag v0.3.0 && git push origin v0.3.0`) oppure
-# manualmente da "Actions → release → Run workflow".
-# La pubblicazione richiede il secret CLOUDFLARE_API_TOKEN (Settings → Secrets → Actions);
-# senza, gli installer restano scaricabili come artifact della run.
+# manualmente da "Actions → release → Run workflow". Nessun secret richiesto.
 name: release
 
 on:
@@ -13,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: "Pubblica su nexusmc.online al termine"
+        description: "Crea la GitHub Release al termine"
         type: boolean
         default: true
 
@@ -97,6 +96,8 @@ jobs:
     needs: build
     if: github.event_name == 'push' || inputs.publish
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -104,21 +105,26 @@ jobs:
         with:
           pattern: installer-*
           merge-multiple: true
-          path: site/cdn/download
+          path: dist
 
-      - uses: actions/setup-node@v4
+      - name: Versione
+        id: v
+        run: echo "version=$(node -p "require('./src-tauri/tauri.conf.json').version")" >> "$GITHUB_OUTPUT"
+
+      # Nomi dei file fissi: https://github.com/<repo>/releases/latest/download/<file> punta sempre
+      # all'ultima versione ed è il link usato da nexusmc.online.
+      - name: Release GitHub
+        uses: softprops/action-gh-release@v2
         with:
-          node-version: 22
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', steps.v.outputs.version) }}
+          name: Nexus Launcher v${{ steps.v.outputs.version }}
+          make_latest: true
+          body: |
+            Scarica la versione per il tuo sistema da https://nexusmc.online
 
-      - name: Scrivi latest.json
-        run: node site/scripts/write-latest.mjs
-
-      - name: Pubblica su Cloudflare
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
-            echo "::warning::Secret CLOUDFLARE_API_TOKEN mancante: installer non pubblicati (scaricali dagli artifact della run)."
-            exit 0
-          fi
-          cd site && npx -y wrangler@4 deploy
+            | Sistema | File |
+            |---|---|
+            | Windows 10/11 | `nexus-launcher-setup.exe` (consigliato) · `nexus-launcher.msi` |
+            | macOS 10.15+ (Intel e Apple Silicon) | `nexus-launcher.dmg` |
+            | Linux | `nexus-launcher.AppImage` · `nexus-launcher.deb` · `nexus-launcher.rpm` |
+          files: dist/*

@@ -2,18 +2,6 @@
   X-Robots-Tag: noindex
   X-Content-Type-Options: nosniff
 
-/download/latest.json
-  Access-Control-Allow-Origin: *
-  Cache-Control: no-cache
-
-/download/*.exe
-  Content-Disposition: attachment
-  Cache-Control: public, max-age=300
-
-/download/*.msi
-  Content-Disposition: attachment
-  Cache-Control: public, max-age=300
-
 /media/*
   Access-Control-Allow-Origin: *
   Cache-Control: public, max-age=604800
