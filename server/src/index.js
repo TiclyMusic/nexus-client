@@ -91,9 +91,10 @@ async function handleAuth(req, env) {
 
   let resp;
   try {
-    resp = await fetch(
-      `https://sessionserver.mojang.com/session/minecraft/hasJoined?username=${encodeURIComponent(claimedName)}&serverId=${encodeURIComponent(serverId)}`,
-    );
+    // Mojang risponde 403 alle richieste dirette da Cloudflare Workers: passiamo da un proxy
+    // (funzione Netlify site/netlify/functions/has-joined.mjs) che restituisce la risposta originale.
+    const base = env.HASJOINED_URL || "https://sessionserver.mojang.com/session/minecraft/hasJoined";
+    resp = await fetch(`${base}?username=${encodeURIComponent(claimedName)}&serverId=${encodeURIComponent(serverId)}`);
   } catch (e) {
     return json({ error: `Il server non è riuscito a contattare Minecraft: ${e.message}` }, 502);
   }

@@ -1,4 +1,8 @@
-# Netlify: imposta "Base directory" = site (oppure trascina la cartella site/public su Netlify).
-# Pagina statica, nessuna build. Installer e video sono serviti da Cloudflare (vedi index.html).
+# Netlify: base directory = site. Pagina statica (nessuna build) + una funzione serverless.
 [build]
   publish = "public"
+
+# netlify/functions/has-joined.mjs: proxy della verifica Mojang usato dal server amici
+# (Mojang blocca le richieste da Cloudflare Workers).
+[functions]
+  directory = "netlify/functions"

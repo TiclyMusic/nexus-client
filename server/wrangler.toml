@@ -5,6 +5,10 @@ compatibility_date = "2024-11-01"
 account_id = "fdd8b5348ae948cc89bcbd8c896d3082"
 workers_dev = true
 
+[vars]
+# Proxy della verifica Mojang `hasJoined`: le chiamate dirette da Cloudflare ricevono 403.
+HASJOINED_URL = "https://nexusmc.online/.netlify/functions/has-joined"
+
 # Database D1 — l'id viene riempito dal comando `wrangler d1 create` (vedi README).
 [[d1_databases]]
 binding = "DB"
