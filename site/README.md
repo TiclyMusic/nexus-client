@@ -27,10 +27,15 @@ La CI (`.github/workflows/release.yml`) compila Windows (`nexus-launcher-setup.e
 macOS (`nexus-launcher.dmg`, universale Intel + Apple Silicon) e Linux (`.AppImage`, `.deb`, `.rpm`)
 e crea la GitHub Release con quei file. Nessun secret richiesto.
 
+## Funzione Netlify `has-joined`
+
+`netlify/functions/has-joined.mjs` inoltra la verifica `hasJoined` a Mojang per il server amici
+(`server/`, variabile `HASJOINED_URL`): Mojang risponde 403 alle chiamate dirette da Cloudflare Workers.
+
 ## Pubblicare la pagina (solo se cambi `public/`)
 
 ```powershell
-npx netlify-cli deploy --prod --no-build --dir site/public --site e1530e25-7c40-4101-9308-2912dea7549b
+npx netlify-cli deploy --prod --no-build --dir site/public --functions site/netlify/functions --site e1530e25-7c40-4101-9308-2912dea7549b
 ```
 
 Se modifichi la pagina aggiorna anche `<lastmod>` in `public/sitemap.xml`.
