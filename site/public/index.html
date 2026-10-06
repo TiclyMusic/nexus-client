@@ -10,6 +10,8 @@
   <link rel="alternate" hreflang="x-default" href="https://nexusmc.online/" />
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
   <meta name="application-name" content="Nexus Launcher" />
+  <meta name="author" content="Matthias Peterlini" />
+  <link rel="author" href="https://matthiaspeterlini.tech/" />
   <meta name="theme-color" content="#f7f7f4" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#0d0f0d" media="(prefers-color-scheme: dark)" />
   <meta name="color-scheme" content="light dark" />
@@ -53,12 +55,20 @@
         "publisher": { "@id": "https://nexusmc.online/#org" }
       },
       {
+        "@type": "Person",
+        "@id": "https://nexusmc.online/#author",
+        "name": "Matthias Peterlini",
+        "url": "https://matthiaspeterlini.tech/",
+        "sameAs": ["https://github.com/matthias-peterlini"]
+      },
+      {
         "@type": "Organization",
         "@id": "https://nexusmc.online/#org",
         "name": "Nexus Launcher",
         "url": "https://nexusmc.online/",
         "logo": "https://nexusmc.online/img/icon-512.png",
-        "sameAs": ["https://github.com/matthias-peterlini/Nexus-client"]
+        "sameAs": ["https://github.com/matthias-peterlini/Nexus-client"],
+        "founder": { "@id": "https://nexusmc.online/#author" }
       },
       {
         "@type": "SoftwareApplication",
@@ -83,6 +93,7 @@
           "Download paralleli con verifica SHA1 e Java automatico"
         ],
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+        "author": { "@id": "https://nexusmc.online/#author" },
         "publisher": { "@id": "https://nexusmc.online/#org" }
       },
       {
@@ -558,7 +569,7 @@
       <div class="foot">
         <div>
           <a class="brand" href="/"><img src="/logo.svg" alt="" width="26" height="26" />Nexus Launcher</a>
-          <p style="margin-top: 12px; max-width: 36ch">Launcher open-source per Minecraft: Java Edition.</p>
+          <p style="margin-top: 12px; max-width: 40ch">Launcher open-source per Minecraft: Java Edition. Ideato e sviluppato da <a href="https://matthiaspeterlini.tech/" style="color: var(--ink); text-decoration: underline; text-underline-offset: 3px">Matthias Peterlini</a>.</p>
         </div>
         <div>
           <h4>Prodotto</h4>
@@ -574,11 +585,12 @@
             <li><a href="https://github.com/matthias-peterlini/Nexus-client">Codice sorgente</a></li>
             <li><a href="https://github.com/matthias-peterlini/Nexus-client/releases">Note di rilascio</a></li>
             <li><a href="https://github.com/matthias-peterlini/Nexus-client/issues">Segnala un problema</a></li>
+            <li><a href="https://matthiaspeterlini.tech/">L'autore</a></li>
           </ul>
         </div>
       </div>
       <div class="legal">
-        <span>© <span id="year">2026</span> Nexus Launcher</span>
+        <span>© <span id="year">2026</span> <a href="https://matthiaspeterlini.tech/">Matthias Peterlini</a> · Nexus Launcher</span>
         <span>Non affiliato con Mojang Studios o Microsoft. Minecraft è un marchio di Mojang Synergies AB.</span>
       </div>
     </div>
