@@ -331,9 +331,12 @@ export async function executeAction(action: AiAction, onSteps: (steps: Step[]) =
       }
       await step("Download di Minecraft, loader e librerie", () => api.installInstance(inst.id));
       store.openInstance(inst.id);
-      store.snack(`Istanza "${inst.name}" creata con successo!`, "success", {
-        label: "Gioca",
-        run: () => useApp.getState().launch(inst.id),
+      store.notify({
+        title: "Installazione completata",
+        body: `${inst.name} è pronta per giocare`,
+        icon: "download_done",
+        tone: "success",
+        action: { label: "Gioca", run: () => useApp.getState().launch(inst.id) },
       });
       return;
     }
@@ -341,7 +344,7 @@ export async function executeAction(action: AiAction, onSteps: (steps: Step[]) =
       for (const slug of action.projects) {
         await step(`Installazione ${slug}`, () => api.installProject(action.instanceId, slug), true);
       }
-      store.snack(`Contenuti installati con successo!`, "success");
+      store.notify({ title: "Installazione completata", body: "Contenuti installati con successo", icon: "download_done", tone: "success" });
       return;
     }
     case "update_instance": {

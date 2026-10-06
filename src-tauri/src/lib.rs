@@ -63,6 +63,16 @@ pub fn run() {
                     friends::heartbeat(&hb, &state).await;
                 }
             });
+
+            // Nuovi messaggi di chat (privati e di gruppo) per le notifiche, ogni 6s.
+            let inbox = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                loop {
+                    tokio::time::sleep(std::time::Duration::from_secs(6)).await;
+                    let state = inbox.state::<AppState>();
+                    friends::poll_inbox(&inbox, &state).await;
+                }
+            });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -112,10 +122,7 @@ pub fn run() {
             ai_local::local_ai_status,
             ai_local::local_ai_prepare,
             // Tunnel & Host
-            tunnel::start_tunnel,
-            tunnel::stop_tunnel,
             tunnel::get_tunnel_status,
-            tunnel::detect_lan_port,
             // Amici & Presenza
             friends::friends_configured,
             friends::get_friends,
@@ -127,6 +134,14 @@ pub fn run() {
             friends::set_friend_favorite,
             friends::get_chat_messages,
             friends::send_chat_message,
+            friends::get_groups,
+            friends::create_group,
+            friends::add_group_members,
+            friends::rename_group,
+            friends::kick_group_member,
+            friends::leave_group,
+            friends::get_group_messages,
+            friends::send_group_message,
             // Tema Minecraft Material 3
             minecraft::theme::apply_material3_theme,
             minecraft::theme::is_material3_theme_enabled,

@@ -69,7 +69,7 @@ function ResultCard({ hit, onInstall, installing, index }: { hit: SearchHit; onI
 }
 
 export function BrowsePage() {
-  const { instances, browseTarget, snack, openInstance, refreshInstances } = useApp();
+  const { instances, browseTarget, snack, notify, openInstance, refreshInstances } = useApp();
   const [type, setType] = useState<ProjectType>(browseTarget.type ?? "mod");
   const [targetId, setTargetId] = useState<string>(browseTarget.instanceId ?? instances[0]?.id ?? "");
   const [compatibleOnly, setCompatibleOnly] = useState(true);
@@ -124,7 +124,13 @@ export function BrowsePage() {
       if (hit.project_type === "modpack") {
         const inst = await api.installModpack(hit.project_id);
         await refreshInstances();
-        snack(`Modpack "${inst.name}" pronto`, "success", { label: "Apri", run: () => openInstance(inst.id) });
+        notify({
+          title: "Installazione completata",
+          body: `Il modpack ${inst.name} è pronto`,
+          icon: "download_done",
+          tone: "success",
+          action: { label: "Apri", run: () => openInstance(inst.id) },
+        });
       } else {
         if (!target) {
           snack("Seleziona prima un'istanza di destinazione", "error");
@@ -132,7 +138,12 @@ export function BrowsePage() {
         }
         const added = await api.installProject(target.id, hit.project_id);
         const deps = added.filter((a) => a.dependency).map((a) => a.title);
-        snack(`${hit.title} installato in ${target.name}${deps.length ? ` (+ dipendenze: ${deps.join(", ")})` : ""}`, "success");
+        notify({
+          title: `${hit.title} installato`,
+          body: `In ${target.name}${deps.length ? ` · dipendenze: ${deps.join(", ")}` : ""}`,
+          icon: "download_done",
+          tone: "success",
+        });
       }
     } catch (e) {
       snack(errorMessage(e), "error");

@@ -24,3 +24,6 @@ tsconfig.tsbuildinfo
 
 # archivi locali (es. upload manuale su Netlify)
 site/*.zip
+
+# variabili locali di wrangler dev (segreti)
+.dev.vars

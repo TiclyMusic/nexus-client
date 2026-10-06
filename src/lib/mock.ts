@@ -1,6 +1,6 @@
 // Dati fittizi usati SOLO quando il frontend gira in un browser normale (npm run dev senza Tauri),
 // così da poter iterare sulla UI senza il backend Rust.
-import type { AccountInfo, Instance, LocalContent, SearchResponse, Settings } from "./types";
+import type { AccountInfo, Group, GroupMessage, Instance, LocalContent, SearchResponse, Settings } from "./types";
 
 const now = Date.now();
 
@@ -123,6 +123,27 @@ const mockChats: Record<string, { id: number; from: string; to: string; text: st
   ],
 };
 
+const mockGroups: Group[] = [
+  {
+    id: 1,
+    name: "Squadra Survival",
+    owner: accounts[0].uuid,
+    members: [
+      { uuid: accounts[0].uuid, name: accounts[0].username, online: true },
+      { uuid: "ec561538f3fd461daff5086b22154bce", name: "Alex", online: true },
+      { uuid: "8667ba71b85a4004af54457a9734eed7", name: "Steve", online: true },
+      { uuid: "61699b2ed3274a019f1e0ea8c3f06bc6", name: "Herobrine", online: false },
+    ],
+    unread: 2,
+  },
+];
+const mockGroupChats: Record<number, GroupMessage[]> = {
+  1: [
+    { id: 11, groupId: 1, from: "8667ba71b85a4004af54457a9734eed7", name: "Steve", text: "Stasera base nel nether?", created: Date.now() - 900_000 },
+    { id: 12, groupId: 1, from: "ec561538f3fd461daff5086b22154bce", name: "Alex", text: "Ci sto, apro il mondo alle 21", created: Date.now() - 120_000 },
+  ],
+};
+
 export async function mockInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   await new Promise((r) => setTimeout(r, 120));
   const out = ((): unknown => {
@@ -199,14 +220,31 @@ export async function mockInvoke<T>(cmd: string, args?: Record<string, unknown>)
         (mockChats[uuid] ??= []).push(msg);
         return msg;
       }
-      case "start_tunnel":
-        return { active: true, localPort: args?.localPort ?? 25565, remotePort: 38421, publicAddress: "bore.pub:38421", serverHost: "bore.pub" };
-      case "stop_tunnel":
-        return null;
       case "get_tunnel_status":
         return null;
-      case "detect_lan_port":
-        return 25565;
+      case "get_groups":
+        return mockGroups;
+      case "create_group": {
+        const members = ((args?.members as string[]) ?? []).map((uuid) => ({ uuid, name: uuid.slice(0, 6), online: false }));
+        const id = mockGroups.length + 1;
+        mockGroups.push({ id, name: String(args?.name ?? "Gruppo"), owner: accounts[0].uuid, members: [{ uuid: accounts[0].uuid, name: accounts[0].username, online: true }, ...members], unread: 0 });
+        return id;
+      }
+      case "add_group_members":
+      case "rename_group":
+      case "kick_group_member":
+      case "leave_group":
+        return null;
+      case "get_group_messages": {
+        const list = mockGroupChats[args?.id as number] ?? [];
+        return list.filter((m) => m.id > ((args?.after as number) ?? 0));
+      }
+      case "send_group_message": {
+        const id = args?.id as number;
+        const msg = { id: ++mockChatId, groupId: id, from: accounts[0].uuid, name: accounts[0].username, text: String(args?.text ?? ""), created: Date.now() };
+        (mockGroupChats[id] ??= []).push(msg);
+        return msg;
+      }
       case "apply_material3_theme":
         return null;
       case "is_material3_theme_enabled":

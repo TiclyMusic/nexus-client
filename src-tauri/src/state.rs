@@ -32,6 +32,8 @@ pub struct AppState {
     pub local_ai: Mutex<crate::ai_local::LocalAi>,
     /// Token di sessione del server amici (cache).
     pub social_token: Mutex<Option<String>>,
+    /// Ultimi id di messaggio (privati, di gruppo) già notificati.
+    pub inbox_cursor: Mutex<Option<(i64, i64)>>,
 }
 
 impl AppState {
@@ -50,6 +52,7 @@ impl AppState {
             active_tunnel: Mutex::new(None),
             local_ai: Mutex::new(Default::default()),
             social_token: Mutex::new(None),
+            inbox_cursor: Mutex::new(None),
             paths,
         }
     }

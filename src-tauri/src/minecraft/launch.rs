@@ -72,6 +72,9 @@ struct GameExit {
 
 pub fn emit_log(app: &AppHandle, instance_id: &str, level: &str, line: &str) {
     app.state::<AppState>().push_log(instance_id, line);
+    if level != "launcher" {
+        crate::tunnel::on_game_log(app, instance_id, line);
+    }
     let _ = app.emit("game-log", GameLog { instance_id, level, line });
 }
 
@@ -383,6 +386,7 @@ pub async fn launch(app: &AppHandle, state: &AppState, id: &str) -> Result<u32> 
             let _ = instances::save(&state, &inst).await;
         }
         emit_log(&app2, &id2, "launcher", &format!("Processo terminato (codice {code:?})"));
+        crate::tunnel::on_game_exit(&app2, &id2);
         let _ = app2.emit(
             "game-exit",
             GameExit {

@@ -38,3 +38,30 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 CREATE INDEX IF NOT EXISTS idx_messages_pair ON messages(from_uuid, to_uuid, id);
 CREATE INDEX IF NOT EXISTS idx_messages_unread ON messages(to_uuid, read_at);
+
+-- Gruppi di amici con chat di gruppo. Chi crea il gruppo ne è il proprietario.
+CREATE TABLE IF NOT EXISTS groups (
+  id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  name    TEXT NOT NULL,
+  owner   TEXT NOT NULL,
+  created INTEGER NOT NULL
+);
+
+-- last_read = id dell'ultimo messaggio del gruppo letto dal membro.
+CREATE TABLE IF NOT EXISTS group_members (
+  group_id  INTEGER NOT NULL,
+  uuid      TEXT NOT NULL,
+  joined    INTEGER NOT NULL,
+  last_read INTEGER DEFAULT 0,
+  PRIMARY KEY (group_id, uuid)
+);
+CREATE INDEX IF NOT EXISTS idx_group_members_uuid ON group_members(uuid);
+
+CREATE TABLE IF NOT EXISTS group_messages (
+  id        INTEGER PRIMARY KEY AUTOINCREMENT,
+  group_id  INTEGER NOT NULL,
+  from_uuid TEXT NOT NULL,
+  body      TEXT NOT NULL,
+  created   INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_group_messages_group ON group_messages(group_id, id);

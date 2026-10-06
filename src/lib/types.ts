@@ -117,6 +117,42 @@ export interface SearchUser {
   relation: FriendRelation;
 }
 
+export interface GroupMember {
+  uuid: string;
+  name: string;
+  online: boolean;
+}
+
+/** Gruppo di amici con chat condivisa. */
+export interface Group {
+  id: number;
+  name: string;
+  owner: string;
+  members: GroupMember[];
+  unread: number;
+}
+
+export interface GroupMessage {
+  id: number;
+  groupId: number;
+  from: string;
+  name: string;
+  text: string;
+  created: number;
+}
+
+/** Messaggio appena ricevuto, per le notifiche. */
+export interface InboxMessage {
+  kind: "direct" | "group";
+  id: number;
+  groupId?: number | null;
+  groupName?: string | null;
+  from: string;
+  name: string;
+  text: string;
+  created: number;
+}
+
 export interface TunnelInfo {
   active: boolean;
   localPort: number;

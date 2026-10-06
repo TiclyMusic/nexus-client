@@ -1,13 +1,19 @@
-//! Tunnel P2P / reverse-proxy per hostare mondi Minecraft in locale via LAN e condividerli con amici senza port forwarding.
+//! Tunnel automatico per giocare con gli amici senza port forwarding.
+//!
+//! Non ci sono pulsanti: quando il gioco scrive nel log che un mondo è stato aperto in LAN,
+//! il launcher apre subito il tunnel verso quella porta e aggiorna la presenza ("hosting" con
+//! l'indirizzo per entrare). Quando il mondo viene chiuso o il gioco esce, il tunnel si chiude.
 
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::sync::oneshot;
 
 use crate::{
     error::{msg, Result},
     state::AppState,
 };
+
+const TUNNEL_SERVER: &str = "bore.pub";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -20,6 +26,7 @@ pub struct TunnelInfo {
 }
 
 pub struct ActiveTunnel {
+    pub instance_id: String,
     pub local_port: u16,
     pub remote_port: u16,
     pub public_address: String,
@@ -27,113 +34,145 @@ pub struct ActiveTunnel {
     pub cancel: oneshot::Sender<()>,
 }
 
-#[tauri::command]
-pub async fn start_tunnel(
-    app: AppHandle,
-    state: State<'_, AppState>,
-    local_port: Option<u16>,
-    server: Option<String>,
-) -> Result<TunnelInfo> {
+impl ActiveTunnel {
+    fn info(&self) -> TunnelInfo {
+        TunnelInfo {
+            active: true,
+            local_port: self.local_port,
+            remote_port: self.remote_port,
+            public_address: self.public_address.clone(),
+            server_host: self.server_host.clone(),
+        }
+    }
+}
+
+/// Porta LAN annunciata da una riga di log del gioco, se la riga è quella di "Apri in LAN".
+///
+/// Il server integrato scrive "Started serving on 51234" (versioni recenti) o "Started on 51234"
+/// (vecchie); la chat riporta "Local game hosted on port 51234" nella lingua del gioco.
+pub fn lan_port_from_log(line: &str) -> Option<u16> {
+    // solo righe del server integrato o della chat: un mod che apre una sua porta non va esposto
+    let server = line.contains("Server thread") && (line.contains("Started serving on") || line.contains("Started on "));
+    let chat = line.contains("[CHAT]") && (line.contains("hosted on port") || line.contains("ospitata sulla porta"));
+    if !(server || chat) {
+        return None;
+    }
+    line.split(|c: char| !c.is_ascii_digit())
+        .filter(|s| !s.is_empty())
+        .last()
+        .and_then(|p| p.parse::<u16>().ok())
+        .filter(|p| *p >= 1024)
+}
+
+/// Il server integrato si ferma quando il giocatore esce dal mondo.
+pub fn lan_closed_from_log(line: &str) -> bool {
+    line.contains("Stopping server")
+}
+
+async fn open(app: &AppHandle, state: &AppState, instance_id: &str, port: u16) -> Result<TunnelInfo> {
     let mut current = state.active_tunnel.lock().await;
     if let Some(active) = current.as_ref() {
-        return Ok(TunnelInfo {
-            active: true,
-            local_port: active.local_port,
-            remote_port: active.remote_port,
-            public_address: active.public_address.clone(),
-            server_host: active.server_host.clone(),
-        });
+        if active.local_port == port {
+            return Ok(active.info());
+        }
+    }
+    if let Some(old) = current.take() {
+        let _ = old.cancel.send(());
     }
 
-    let port = local_port.unwrap_or(25565);
-    let srv = server.unwrap_or_else(|| "bore.pub".to_string());
-
-    let client = bore_cli::client::Client::new("localhost", port, &srv, 0, None)
+    let client = bore_cli::client::Client::new("127.0.0.1", port, TUNNEL_SERVER, 0, None)
         .await
-        .map_err(|e| msg(format!("Impossibile connettersi al server tunnel ({srv}): {e}")))?;
-
+        .map_err(|e| msg(format!("Impossibile aprire il tunnel ({TUNNEL_SERVER}): {e}")))?;
     let remote_port = client.remote_port();
-    let public_address = format!("{srv}:{remote_port}");
     let (cancel_tx, cancel_rx) = oneshot::channel::<()>();
 
-    let info = TunnelInfo {
-        active: true,
+    let active = ActiveTunnel {
+        instance_id: instance_id.to_string(),
         local_port: port,
         remote_port,
-        public_address: public_address.clone(),
-        server_host: srv.clone(),
+        public_address: format!("{TUNNEL_SERVER}:{remote_port}"),
+        server_host: TUNNEL_SERVER.to_string(),
+        cancel: cancel_tx,
     };
+    let info = active.info();
+    *current = Some(active);
+    drop(current);
 
-    let app_handle = app.clone();
-    let info_clone = info.clone();
+    let handle = app.clone();
     tokio::spawn(async move {
         tokio::select! {
             _ = client.listen() => {},
             _ = cancel_rx => {},
         }
-        let _ = app_handle.emit("tunnel-status", false);
-    });
-
-    *current = Some(ActiveTunnel {
-        local_port: port,
-        remote_port,
-        public_address,
-        server_host: srv,
-        cancel: cancel_tx,
+        // se il tunnel cade da solo, libera lo stato (solo se è ancora questo tunnel)
+        let state = handle.state::<AppState>();
+        let mut current = state.active_tunnel.lock().await;
+        if current.as_ref().is_some_and(|t| t.remote_port == remote_port) {
+            *current = None;
+        }
+        let _ = handle.emit("tunnel-status", false);
     });
 
     let _ = app.emit("tunnel-status", true);
-    Ok(info_clone)
+    Ok(info)
 }
 
-#[tauri::command]
-pub async fn stop_tunnel(app: AppHandle, state: State<'_, AppState>) -> Result<()> {
+async fn close(app: &AppHandle, state: &AppState, instance_id: Option<&str>) -> bool {
     let mut current = state.active_tunnel.lock().await;
+    let matches = current.as_ref().is_some_and(|t| instance_id.map_or(true, |id| t.instance_id == id));
+    if !matches {
+        return false;
+    }
     if let Some(active) = current.take() {
         let _ = active.cancel.send(());
-        let _ = app.emit("tunnel-status", false);
     }
-    Ok(())
+    let _ = app.emit("tunnel-status", false);
+    true
+}
+
+/// Chiamata per ogni riga di log del gioco: apre o chiude il tunnel in background.
+pub fn on_game_log(app: &AppHandle, instance_id: &str, line: &str) {
+    if let Some(port) = lan_port_from_log(line) {
+        let (app, id) = (app.clone(), instance_id.to_string());
+        tauri::async_runtime::spawn(async move {
+            let state = app.state::<AppState>();
+            match open(&app, &state, &id, port).await {
+                // presenza subito aggiornata: gli amici vedono "Entra" senza aspettare l'heartbeat
+                Ok(_) => crate::friends::heartbeat(&app, &state).await,
+                Err(e) => eprintln!("tunnel: {e}"),
+            }
+        });
+    } else if lan_closed_from_log(line) {
+        on_game_exit(app, instance_id);
+    }
+}
+
+/// Il gioco (o il mondo) è stato chiuso: chiude il tunnel di quell'istanza.
+pub fn on_game_exit(app: &AppHandle, instance_id: &str) {
+    let (app, id) = (app.clone(), instance_id.to_string());
+    tauri::async_runtime::spawn(async move {
+        let state = app.state::<AppState>();
+        if close(&app, &state, Some(&id)).await {
+            crate::friends::heartbeat(&app, &state).await;
+        }
+    });
 }
 
 #[tauri::command]
 pub async fn get_tunnel_status(state: State<'_, AppState>) -> Result<Option<TunnelInfo>> {
-    let current = state.active_tunnel.lock().await;
-    Ok(current.as_ref().map(|a| TunnelInfo {
-        active: true,
-        local_port: a.local_port,
-        remote_port: a.remote_port,
-        public_address: a.public_address.clone(),
-        server_host: a.server_host.clone(),
-    }))
+    Ok(state.active_tunnel.lock().await.as_ref().map(ActiveTunnel::info))
 }
 
-/// Rileva eventuale porta LAN aperta analizzando gli ultimi log dei giochi in esecuzione.
-#[tauri::command]
-pub fn detect_lan_port(state: State<'_, AppState>) -> Option<u16> {
-    let logs = state.logs.lock().unwrap();
-    for (_, lines) in logs.iter() {
-        for line in lines.iter().rev().take(100) {
-            // "Started on 54321" o "Hosted world on port 54321"
-            if let Some(idx) = line.find("Started on ") {
-                let rest = &line[idx + 11..];
-                if let Some(port_str) = rest.split_whitespace().next() {
-                    let cleaned = port_str.trim_matches(|c: char| !c.is_ascii_digit());
-                    if let Ok(p) = cleaned.parse::<u16>() {
-                        return Some(p);
-                    }
-                }
-            }
-            if let Some(idx) = line.find("Hosted world on port ") {
-                let rest = &line[idx + 21..];
-                if let Some(port_str) = rest.split_whitespace().next() {
-                    let cleaned = port_str.trim_matches(|c: char| !c.is_ascii_digit());
-                    if let Ok(p) = cleaned.parse::<u16>() {
-                        return Some(p);
-                    }
-                }
-            }
-        }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn detects_lan_port() {
+        assert_eq!(lan_port_from_log("[12:00:01] [Server thread/INFO]: Started serving on 51234"), Some(51234));
+        assert_eq!(lan_port_from_log("[Render thread/INFO]: [System] [CHAT] Local game hosted on port 49152"), Some(49152));
+        assert_eq!(lan_port_from_log("[CHAT] Partita locale ospitata sulla porta 50000"), Some(50000));
+        assert_eq!(lan_port_from_log("[Server thread/INFO]: Preparing spawn area: 83%"), None);
+        assert!(lan_closed_from_log("[Server thread/INFO]: Stopping server"));
     }
-    None
 }

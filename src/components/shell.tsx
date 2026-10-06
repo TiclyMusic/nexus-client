@@ -333,3 +333,54 @@ export function SnackbarHost() {
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Notifiche a comparsa (in basso a destra)
+// ---------------------------------------------------------------------------
+
+export function NotificationHost() {
+  const { notices, dismissNotice } = useApp();
+  return (
+    <div className="pointer-events-none fixed right-5 bottom-5 z-[70] flex w-[360px] max-w-[calc(100vw-40px)] flex-col items-stretch gap-2.5">
+      {notices.map((n) => (
+        <div
+          key={n.id}
+          role="status"
+          className="pointer-events-auto flex animate-notice items-start gap-3 rounded-3xl bg-surface-container-highest p-3.5 pr-2 text-on-surface elev-3"
+        >
+          {n.avatarUuid ? (
+            <Avatar account={{ uuid: n.avatarUuid, kind: "microsoft", username: "", expiresAt: 0, active: false }} size={40} />
+          ) : (
+            <div
+              className={cn(
+                "flex size-10 shrink-0 items-center justify-center rounded-xl",
+                n.tone === "error" ? "bg-error-container text-on-error-container" : "bg-primary-container text-on-primary-container",
+              )}
+            >
+              <Icon name={n.icon ?? (n.tone === "error" ? "error" : "check_circle")} filled size={22} />
+            </div>
+          )}
+          <div className="min-w-0 flex-1 pt-0.5">
+            <p className="truncate text-sm font-semibold">{n.title}</p>
+            {n.body && <p className="mt-0.5 line-clamp-3 text-sm break-words text-on-surface-variant">{n.body}</p>}
+            {n.action && (
+              <button
+                type="button"
+                className="state-layer -ml-2 mt-1.5 cursor-pointer rounded-full px-2 py-1 text-sm font-semibold text-primary"
+                onClick={() => {
+                  n.action!.run();
+                  dismissNotice(n.id);
+                }}
+              >
+                {n.action.label}
+              </button>
+            )}
+          </div>
+          <button type="button" aria-label="Chiudi" className="cursor-pointer p-1 text-on-surface-variant opacity-70 hover:opacity-100" onClick={() => dismissNotice(n.id)}>
+            <Icon name="close" size={18} />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}

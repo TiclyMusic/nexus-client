@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { api, errorMessage } from "./api";
 import { applyTheme, DEFAULT_UI } from "./theme";
-import type { AccountInfo, FriendsData, GameLog, Instance, Progress, ProjectType, Settings, SystemInfo, TunnelInfo, UiPrefs } from "./types";
+import type { AccountInfo, FriendsData, GameLog, Group, InboxMessage, Instance, Progress, ProjectType, Settings, SystemInfo, UiPrefs } from "./types";
 
 export type Page = "home" | "instance" | "browse" | "accounts" | "settings" | "friends";
 
@@ -16,6 +16,21 @@ export interface Snack {
   tone: "info" | "error" | "success";
   action?: { label: string; run: () => void };
 }
+
+/** Notifica a comparsa in basso a destra (installazioni completate, messaggi di chat). */
+export interface Notice {
+  id: number;
+  title: string;
+  body?: string;
+  icon?: string;
+  /** Mostra la testa Minecraft di questo giocatore al posto dell'icona. */
+  avatarUuid?: string;
+  tone?: "info" | "success" | "error";
+  action?: { label: string; run: () => void };
+}
+
+/** Chat aperta: privata con un amico o di gruppo. */
+export type ChatTarget = { kind: "direct"; uuid: string; name: string } | { kind: "group"; id: number; name: string };
 
 interface BrowseTarget {
   instanceId?: string;
@@ -39,8 +54,13 @@ interface AppStore {
   /** Messaggi di chat non letti in totale (badge su "Amici"). */
   unreadTotal: number;
   setUnreadTotal: (n: number) => void;
-  tunnel: TunnelInfo | null;
-  setTunnel: (t: TunnelInfo | null) => void;
+  groups: Group[];
+  refreshGroups: () => Promise<void>;
+  chat: ChatTarget | null;
+  openChat: (target: ChatTarget) => void;
+  closeChat: () => void;
+  /** Nuovo messaggio dal server (evento "social-message"). */
+  onInboxMessage: (m: InboxMessage) => void;
 
   settings: Settings | null;
   ui: UiPrefs;
@@ -73,6 +93,9 @@ interface AppStore {
   snacks: Snack[];
   snack: (text: string, tone?: Snack["tone"], action?: Snack["action"]) => void;
   dismissSnack: (id: number) => void;
+  notices: Notice[];
+  notify: (n: Omit<Notice, "id">) => void;
+  dismissNotice: (id: number) => void;
 
   launch: (id: string) => Promise<void>;
 }
@@ -80,7 +103,11 @@ interface AppStore {
 const MAX_LOG_LINES = 5000;
 let logSeq = 0;
 let snackSeq = 0;
+let noticeSeq = 0;
 let settingsSeq = 0;
+
+const countUnread = (friends: FriendsData, groups: Group[]) =>
+  friends.friends.reduce((sum, f) => sum + (f.unread ?? 0), 0) + groups.reduce((sum, g) => sum + (g.unread ?? 0), 0);
 
 function mergeUi(raw: Partial<UiPrefs> | null | undefined): UiPrefs {
   return { ...DEFAULT_UI, ...(raw ?? {}), ai: { ...DEFAULT_UI.ai, ...(raw?.ai ?? {}) } };
@@ -111,26 +138,55 @@ export const useApp = create<AppStore>((set, get) => ({
     }
   },
   friends: { configured: false, friends: [], incoming: [], outgoing: [] },
-  tunnel: null,
-  setTunnel: (tunnel) => set({ tunnel }),
   unreadTotal: 0,
   setUnreadTotal: (n) => {
     const prev = get().unreadTotal;
     set({ unreadTotal: n });
-    // nuovi messaggi: aggiorna la lista amici (badge per amico) e avvisa se non sei già lì
-    if (n > prev) {
+    // il totale è cambiato: aggiorna i badge per amico e per gruppo
+    if (n !== prev) {
       get().refreshFriends();
-      if (get().page !== "friends") get().snack(n === 1 ? "Hai un nuovo messaggio" : `Hai ${n} messaggi non letti`, "info", { label: "Apri", run: () => get().navigate("friends") });
+      get().refreshGroups();
     }
   },
   refreshFriends: async () => {
     try {
       const friends = await api.getFriends();
-      set({ friends, unreadTotal: friends.friends.reduce((sum, f) => sum + (f.unread ?? 0), 0) });
+      set({ friends, unreadTotal: countUnread(friends, get().groups) });
     } catch (e) {
       // errori del server amici non devono spammare snackbar: li mostra la pagina
       console.warn("refreshFriends", errorMessage(e));
     }
+  },
+  groups: [],
+  refreshGroups: async () => {
+    try {
+      const groups = await api.getGroups();
+      set({ groups, unreadTotal: countUnread(get().friends, groups) });
+    } catch (e) {
+      console.warn("refreshGroups", errorMessage(e));
+    }
+  },
+  chat: null,
+  openChat: (chat) => set({ chat }),
+  closeChat: () => {
+    set({ chat: null });
+    // la chat segna i messaggi come letti: aggiorna i badge
+    get().refreshFriends();
+    get().refreshGroups();
+  },
+  onInboxMessage: (m) => {
+    const { chat, notify, openChat } = get();
+    const target: ChatTarget =
+      m.kind === "group" ? { kind: "group", id: m.groupId ?? 0, name: m.groupName || "Gruppo" } : { kind: "direct", uuid: m.from, name: m.name };
+    // già nella chat giusta: il messaggio compare lì, niente notifica
+    const open = chat && (chat.kind === "group" ? target.kind === "group" && chat.id === target.id : target.kind === "direct" && chat.uuid === target.uuid);
+    if (open) return;
+    notify({
+      title: m.kind === "group" ? `${m.name} · ${m.groupName ?? "Gruppo"}` : m.name || "Nuovo messaggio",
+      body: m.text.length > 140 ? `${m.text.slice(0, 140)}…` : m.text,
+      avatarUuid: m.from,
+      action: { label: "Rispondi", run: () => openChat(target) },
+    });
   },
 
   settings: null,
@@ -212,6 +268,13 @@ export const useApp = create<AppStore>((set, get) => ({
     setTimeout(() => get().dismissSnack(id), tone === "error" ? 8000 : 4500);
   },
   dismissSnack: (id) => set((s) => ({ snacks: s.snacks.filter((x) => x.id !== id) })),
+  notices: [],
+  notify: (n) => {
+    const id = ++noticeSeq;
+    set((s) => ({ notices: [...s.notices.slice(-3), { ...n, id }] }));
+    setTimeout(() => get().dismissNotice(id), 7000);
+  },
+  dismissNotice: (id) => set((s) => ({ notices: s.notices.filter((x) => x.id !== id) })),
 
   launch: async (id) => {
     const { snack, setLogFilter, toggleConsole } = get();

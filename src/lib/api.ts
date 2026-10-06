@@ -9,6 +9,8 @@ import type {
   CreateInstanceRequest,
   DeviceCode,
   DirectMessage,
+  Group,
+  GroupMessage,
   FriendsData,
   SearchUser,
   GameVersions,
@@ -102,11 +104,8 @@ export const api = {
   localAiStatus: () => invoke<LocalAiStatus>("local_ai_status"),
   localAiPrepare: (model?: string) => invoke<string>("local_ai_prepare", { model }),
 
-  // Tunnel & Host
-  startTunnel: (localPort?: number, server?: string) => invoke<TunnelInfo>("start_tunnel", { localPort, server }),
-  stopTunnel: () => invoke<void>("stop_tunnel"),
+  // Tunnel: si apre da solo con "Apri in LAN"
   getTunnelStatus: () => invoke<TunnelInfo | null>("get_tunnel_status"),
-  detectLanPort: () => invoke<number | null>("detect_lan_port"),
 
   // Amici
   friendsConfigured: () => invoke<boolean>("friends_configured"),
@@ -121,6 +120,16 @@ export const api = {
     invoke<void>("set_friend_favorite", { uuid, favorite }),
   getChatMessages: (uuid: string, after?: number) => invoke<DirectMessage[]>("get_chat_messages", { uuid, after: after ?? 0 }),
   sendChatMessage: (uuid: string, text: string) => invoke<DirectMessage>("send_chat_message", { uuid, text }),
+
+  // Gruppi
+  getGroups: () => invoke<Group[]>("get_groups"),
+  createGroup: (name: string, members: string[]) => invoke<number>("create_group", { name, members }),
+  addGroupMembers: (id: number, members: string[]) => invoke<void>("add_group_members", { id, members }),
+  renameGroup: (id: number, name: string) => invoke<void>("rename_group", { id, name }),
+  kickGroupMember: (id: number, uuid: string) => invoke<void>("kick_group_member", { id, uuid }),
+  leaveGroup: (id: number) => invoke<void>("leave_group", { id }),
+  getGroupMessages: (id: number, after?: number) => invoke<GroupMessage[]>("get_group_messages", { id, after: after ?? 0 }),
+  sendGroupMessage: (id: number, text: string) => invoke<GroupMessage>("send_group_message", { id, text }),
 
   // Material 3 In-Game Theme
   applyMaterial3Theme: (instanceId: string, enabled: boolean) =>

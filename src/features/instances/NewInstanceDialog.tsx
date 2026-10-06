@@ -96,7 +96,18 @@ export function NewInstanceDialog({ open, onClose }: { open: boolean; onClose: (
       setName("");
       openInstance(inst.id);
       snack(`Istanza "${inst.name}" creata — download in corso`, "success");
-      api.installInstance(inst.id).catch((e) => snack(errorMessage(e), "error"));
+      api
+        .installInstance(inst.id)
+        .then(() =>
+          useApp.getState().notify({
+            title: "Installazione completata",
+            body: `${inst.name} è pronta per giocare`,
+            icon: "download_done",
+            tone: "success",
+            action: { label: "Gioca", run: () => useApp.getState().launch(inst.id) },
+          }),
+        )
+        .catch((e) => useApp.getState().notify({ title: `Installazione di ${inst.name} non riuscita`, body: errorMessage(e), tone: "error" }));
     } catch (e) {
       snack(errorMessage(e), "error");
     } finally {

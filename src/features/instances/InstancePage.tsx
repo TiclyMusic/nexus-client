@@ -359,7 +359,7 @@ function SettingsTab({ instance, onSaved }: { instance: Instance; onSaved: (i: I
 }
 
 export function InstancePage() {
-  const { selectedInstanceId, instances, navigate, running, progress, launch, snack, refreshInstances } = useApp();
+  const { selectedInstanceId, instances, navigate, running, progress, launch, snack, notify, refreshInstances } = useApp();
   const [tab, setTab] = useState<Tab>("mods");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [cloneName, setCloneName] = useState<string | null>(null);
@@ -410,7 +410,12 @@ export function InstancePage() {
             icon="build"
             label="Ripara (verifica hash di tutti i file)"
             disabled={!!p}
-            onClick={act(() => api.installInstance(instance.id, true), "Verifica completata")}
+            onClick={() =>
+              api
+                .installInstance(instance.id, true)
+                .then(() => notify({ title: "Verifica completata", body: `${instance.name} è stata riparata`, icon: "build_circle", tone: "success" }))
+                .catch((e) => snack(errorMessage(e), "error"))
+            }
           />
           <IconButton icon="delete" label="Elimina" onClick={() => setConfirmDelete(true)} />
         </div>

@@ -4,7 +4,7 @@ import { api, errorMessage, isTauri } from "../../lib/api";
 import { useApp } from "../../lib/store";
 import type { FriendPresence, SearchUser } from "../../lib/types";
 import { Avatar, bodyUrl } from "../../components/shell";
-import { ChatDialog } from "./ChatDialog";
+import { GroupsSection } from "./Groups";
 import { Badge, Button, cn, Dialog, EmptyState, Icon, IconButton, Spinner } from "../../components/ui";
 
 const STATUS_DOT: Record<string, string> = {
@@ -167,24 +167,22 @@ function AddFriendDialog({ open, onClose }: { open: boolean; onClose: () => void
 }
 
 export function FriendsPage() {
-  const { friends, refreshFriends, tunnel, setTunnel, snack, navigate, accounts } = useApp();
+  const { friends, refreshFriends, refreshGroups, openChat, snack, navigate, accounts } = useApp();
   const hasMsAccount = accounts.some((a) => a.kind === "microsoft");
   const me = accounts.find((a) => a.active && a.kind === "microsoft")?.username;
   const [addOpen, setAddOpen] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
-  const [tunnelPort, setTunnelPort] = useState<number>(25565);
-  const [tunnelLoading, setTunnelLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [chatWith, setChatWith] = useState<FriendPresence | null>(null);
 
   useEffect(() => {
     refreshFriends();
-    api.getTunnelStatus().then(setTunnel).catch(() => {});
-    api.detectLanPort().then((p) => p && setTunnelPort(p)).catch(() => {});
-    // Aggiorna la presenza degli amici a intervalli regolari finché la pagina è aperta.
-    const interval = setInterval(() => refreshFriends(), 25000);
+    // Aggiorna la presenza di amici e gruppi a intervalli regolari finché la pagina è aperta.
+    const interval = setInterval(() => {
+      refreshFriends();
+      refreshGroups();
+    }, 25000);
     return () => clearInterval(interval);
-  }, [refreshFriends, setTunnel]);
+  }, [refreshFriends, refreshGroups]);
 
   function copyText(text: string, label: string) {
     navigator.clipboard.writeText(text);
@@ -205,30 +203,6 @@ export function FriendsPage() {
       setBusyId(null);
     }
   };
-
-  async function startTunnel() {
-    setTunnelLoading(true);
-    try {
-      const info = await api.startTunnel(tunnelPort);
-      setTunnel(info);
-      snack(`Tunnel avviato: ${info.publicAddress}`, "success");
-    } catch (e) {
-      snack(errorMessage(e), "error");
-    } finally {
-      setTunnelLoading(false);
-    }
-  }
-  async function stopTunnel() {
-    setTunnelLoading(true);
-    try {
-      await api.stopTunnel();
-      setTunnel(null);
-    } catch (e) {
-      snack(errorMessage(e), "error");
-    } finally {
-      setTunnelLoading(false);
-    }
-  }
 
   const sortedFriends: FriendPresence[] = [...friends.friends].sort((a, b) => {
     if (a.online !== b.online) return a.online ? -1 : 1;
@@ -291,62 +265,6 @@ export function FriendsPage() {
           </Button>
         </div>
       )}
-
-      {/* Host Mondo con Tunnel */}
-      <div className="mb-8 overflow-hidden rounded-3xl bg-surface-container p-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-start gap-4">
-            <div className={cn("flex size-12 shrink-0 items-center justify-center rounded-2xl", tunnel?.active ? "bg-primary text-on-primary animate-pulse" : "bg-primary-container text-on-primary-container")}>
-              <Icon name="cell_tower" size={28} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-semibold">Host Mondo LAN (Tunnel Nexus)</h2>
-                <Badge tone={tunnel?.active ? "primary" : "secondary"}>{tunnel?.active ? "ONLINE" : "INATTIVO"}</Badge>
-              </div>
-              <p className="mt-1 max-w-xl text-xs text-on-surface-variant">
-                Apri un mondo singleplayer con "Apri in LAN", poi avvia il tunnel: gli amici entrano da qualsiasi rete senza aprire porte.
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            {!tunnel?.active ? (
-              <>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-on-surface-variant">Porta LAN:</span>
-                  <input
-                    type="number"
-                    value={tunnelPort}
-                    onChange={(e) => setTunnelPort(Number(e.target.value))}
-                    className="w-24 rounded-xl bg-surface-container-high px-3 py-1.5 text-center font-mono text-sm outline-none"
-                  />
-                </div>
-                <Button icon="sensors" loading={tunnelLoading} onClick={startTunnel}>
-                  Avvia Tunnel
-                </Button>
-              </>
-            ) : (
-              <Button icon="stop_circle" variant="tonal" className="bg-error-container text-on-error-container" loading={tunnelLoading} onClick={stopTunnel}>
-                Ferma Tunnel
-              </Button>
-            )}
-          </div>
-        </div>
-        {tunnel?.active && (
-          <div className="mt-5 flex animate-enter flex-col items-center justify-between gap-4 rounded-2xl border border-outline-variant/30 bg-surface-container-high p-4 sm:flex-row">
-            <div className="flex items-center gap-3">
-              <Icon name="link" className="text-primary" size={24} />
-              <div>
-                <p className="text-xs text-on-surface-variant">Indirizzo pubblico per gli amici:</p>
-                <p className="select-all font-mono text-lg font-bold text-primary">{tunnel.publicAddress}</p>
-              </div>
-            </div>
-            <Button icon={copied === tunnel.publicAddress ? "check" : "content_copy"} onClick={() => copyText(tunnel.publicAddress, "Indirizzo tunnel")}>
-              {copied === tunnel.publicAddress ? "Copiato!" : "Copia indirizzo"}
-            </Button>
-          </div>
-        )}
-      </div>
 
       {/* Richieste in entrata */}
       {friends.incoming.length > 0 && (
@@ -426,12 +344,12 @@ export function FriendsPage() {
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 {f.status === "hosting" && f.joinAddress && (
-                  <Button size="sm" icon="login" onClick={() => copyText(f.joinAddress, "Indirizzo del mondo")}>
-                    Entra
+                  <Button size="sm" icon={copied === f.joinAddress ? "check" : "login"} onClick={() => copyText(f.joinAddress, "Indirizzo del mondo")}>
+                    {copied === f.joinAddress ? "Copiato" : "Entra"}
                   </Button>
                 )}
                 <div className="relative">
-                  <IconButton icon="chat" label={`Chat con ${f.name}`} size={36} variant="tonal" onClick={() => setChatWith(f)} />
+                  <IconButton icon="chat" label={`Chat con ${f.name}`} size={36} variant="tonal" onClick={() => openChat({ kind: "direct", uuid: f.uuid, name: f.name })} />
                   {(f.unread ?? 0) > 0 && (
                     <span className="pointer-events-none absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold text-on-error">
                       {(f.unread ?? 0) > 9 ? "9+" : f.unread}
@@ -444,6 +362,8 @@ export function FriendsPage() {
           ))}
         </div>
       )}
+
+      <GroupsSection enabled={friends.configured && hasMsAccount && !friends.error} />
 
       {/* Richieste inviate: anche a chi non ha ancora Nexus (skin dalle API Minecraft + invito WhatsApp) */}
       {friends.outgoing.length > 0 && (
@@ -482,7 +402,6 @@ export function FriendsPage() {
       )}
 
       <AddFriendDialog open={addOpen} onClose={() => setAddOpen(false)} />
-      <ChatDialog friend={chatWith} onClose={() => setChatWith(null)} />
     </div>
   );
 }

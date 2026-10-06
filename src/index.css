@@ -65,6 +65,7 @@
   --animate-pop: pop 480ms var(--ease-spring) both;
   --animate-slide-up: slide-up 380ms var(--ease-emphasized-decel) both;
   --animate-fade: fade 220ms ease-out both;
+  --animate-notice: notice 460ms var(--ease-emphasized-decel) both;
 }
 
 @keyframes enter {
@@ -77,6 +78,10 @@
 }
 @keyframes slide-up {
   from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes notice {
+  from { opacity: 0; transform: translateX(40px) scale(0.96); }
   to { opacity: 1; transform: none; }
 }
 @keyframes fade {

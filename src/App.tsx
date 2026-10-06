@@ -1,10 +1,11 @@
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { useEffect, useState } from "react";
-import { LogConsole, NavRail, SnackbarHost, TitleBar } from "./components/shell";
+import { LogConsole, NavRail, NotificationHost, SnackbarHost, TitleBar } from "./components/shell";
 import { Spinner } from "./components/ui";
 import { AccountsPage } from "./features/accounts/AccountsPage";
 import { AiPanel } from "./features/ai/AiPanel";
 import { BrowsePage } from "./features/browse/BrowsePage";
+import { ChatDialog } from "./features/friends/ChatDialog";
 import { FriendsPage } from "./features/friends/FriendsPage";
 import { HomePage } from "./features/home/HomePage";
 import { InstancePage } from "./features/instances/InstancePage";
@@ -13,7 +14,7 @@ import { SettingsPage } from "./features/settings/SettingsPage";
 import { api, errorMessage, isTauri } from "./lib/api";
 import { useApp } from "./lib/store";
 import { applyTheme } from "./lib/theme";
-import type { GameExit, GameLog, Progress } from "./lib/types";
+import type { GameExit, GameLog, InboxMessage, Progress } from "./lib/types";
 
 function useBackendEvents() {
   useEffect(() => {
@@ -24,6 +25,7 @@ function useBackendEvents() {
       listen<string>("task-finished", (e) => s().clearProgress(e.payload)),
       listen<GameLog>("game-log", (e) => s().pushLog(e.payload)),
       listen<number>("social-unread", (e) => s().setUnreadTotal(e.payload)),
+      listen<InboxMessage>("social-message", (e) => s().onInboxMessage(e.payload)),
       listen<{ instanceId: string; pid: number }>("game-started", (e) => s().setRunning(e.payload.instanceId, e.payload.pid)),
       listen<GameExit>("game-exit", (e) => {
         const { instanceId, crashed, code } = e.payload;
@@ -59,6 +61,8 @@ export default function App() {
         const running = await api.runningInstances();
         Object.entries(running).forEach(([id, pid]) => setRunning(id, pid));
         setReady(true);
+        // amici e gruppi in background: badge dei non letti e sessione per le notifiche di chat
+        useApp.getState().refreshFriends().then(() => useApp.getState().refreshGroups());
       } catch (e) {
         setFatal(errorMessage(e));
       }
@@ -117,7 +121,9 @@ export default function App() {
         </div>
       </div>
       <NewInstanceDialog open={newInstance} onClose={() => setNewInstance(false)} />
+      <ChatDialog />
       <SnackbarHost />
+      <NotificationHost />
     </div>
   );
 }

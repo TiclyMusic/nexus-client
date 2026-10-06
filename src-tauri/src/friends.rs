@@ -43,6 +43,57 @@ pub struct DirectMessage {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct GroupMember {
+    pub uuid: String,
+    pub name: String,
+    #[serde(default)]
+    pub online: bool,
+}
+
+/// Gruppo di amici con chat condivisa.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Group {
+    pub id: i64,
+    pub name: String,
+    pub owner: String,
+    pub members: Vec<GroupMember>,
+    #[serde(default)]
+    pub unread: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GroupMessage {
+    pub id: i64,
+    pub group_id: i64,
+    pub from: String,
+    #[serde(default)]
+    pub name: String,
+    pub text: String,
+    pub created: i64,
+}
+
+/// Messaggio appena ricevuto (privato o di gruppo), per le notifiche.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InboxMessage {
+    /// "direct" | "group"
+    pub kind: String,
+    pub id: i64,
+    #[serde(default)]
+    pub group_id: Option<i64>,
+    #[serde(default)]
+    pub group_name: Option<String>,
+    pub from: String,
+    #[serde(default)]
+    pub name: String,
+    pub text: String,
+    pub created: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UserRef {
     pub uuid: String,
     pub name: String,
@@ -157,8 +208,13 @@ async fn call(
             continue;
         }
         if !resp.status().is_success() {
+            // il server risponde {"error": "..."}: mostriamo solo il messaggio
             let text = resp.text().await.unwrap_or_default();
-            return Err(msg(text.trim_matches('"').to_string()));
+            let reason = serde_json::from_str::<serde_json::Value>(&text)
+                .ok()
+                .and_then(|v| v["error"].as_str().map(str::to_string))
+                .unwrap_or_else(|| text.trim_matches('"').to_string());
+            return Err(msg(reason));
         }
         return Ok(resp.json().await.unwrap_or(serde_json::Value::Null));
     }
@@ -171,16 +227,15 @@ async fn call(
 
 /// Calcola la presenza corrente dallo stato del launcher (istanze in esecuzione, tunnel host).
 pub async fn current_presence(state: &AppState) -> (String, String, String) {
+    // Mondo aperto agli amici? (tunnel aperto in automatico da "Apri in LAN")
+    let hosting = state.active_tunnel.lock().await.as_ref().map(|t| (t.instance_id.clone(), t.public_address.clone()));
+    if let Some((id, address)) = hosting {
+        let name = crate::instances::load(state, &id).await.map(|i| i.name).unwrap_or(id);
+        return ("hosting".into(), format!("Ha aperto un mondo · {name}"), address);
+    }
     // Istanza in esecuzione?
     let running_id = state.running.lock().unwrap().keys().next().cloned();
     if let Some(id) = running_id {
-        // hosting? (tunnel attivo)
-        let tunnel = state.active_tunnel.lock().await;
-        if let Some(t) = tunnel.as_ref() {
-            let name = crate::instances::load(state, &id).await.map(|i| i.name).unwrap_or(id);
-            return ("hosting".into(), format!("Sta hostando {name}"), t.public_address.clone());
-        }
-        drop(tunnel);
         match crate::instances::load(state, &id).await {
             Ok(i) => return ("playing".into(), format!("{} · {}", i.name, i.mc_version), String::new()),
             Err(_) => return ("playing".into(), "In gioco".into(), String::new()),
@@ -207,6 +262,36 @@ pub async fn heartbeat(app: &AppHandle, state: &AppState) {
         if let Some(n) = value["unread"].as_u64() {
             let _ = app.emit("social-unread", n);
         }
+    }
+}
+
+/// Controlla i nuovi messaggi e li passa all'interfaccia per le notifiche ("social-message").
+/// Parte solo quando c'è già una sessione (la apre l'heartbeat), così non riprova l'accesso
+/// ogni pochi secondi se l'utente non ha un account Microsoft.
+pub async fn poll_inbox(app: &AppHandle, state: &AppState) {
+    if state.social_token.lock().await.is_none() {
+        return;
+    }
+    let cursor = *state.inbox_cursor.lock().await;
+    let path = match cursor {
+        Some((dm, gm)) => format!("/inbox?dm={dm}&gm={gm}"),
+        None => "/inbox".to_string(),
+    };
+    let Ok(value) = call(state, reqwest::Method::GET, &path, None).await else {
+        return;
+    };
+    let next = (
+        value["cursor"]["dm"].as_i64().unwrap_or(0),
+        value["cursor"]["gm"].as_i64().unwrap_or(0),
+    );
+    let messages: Vec<InboxMessage> = serde_json::from_value(value["messages"].clone()).unwrap_or_default();
+    // se arrivano più di 20 messaggi in pochi secondi notifichiamo solo i primi: il badge li conta comunque
+    *state.inbox_cursor.lock().await = Some(next);
+    for m in messages {
+        let _ = app.emit("social-message", m);
+    }
+    if let Some(n) = value["unread"].as_u64() {
+        let _ = app.emit("social-unread", n);
     }
 }
 
@@ -329,6 +414,57 @@ pub async fn get_chat_messages(state: State<'_, AppState>, uuid: String, after: 
 #[tauri::command]
 pub async fn send_chat_message(state: State<'_, AppState>, uuid: String, text: String) -> Result<DirectMessage> {
     let value = call(state.inner(), reqwest::Method::POST, "/messages", Some(json!({ "to": uuid, "text": text }))).await?;
+    serde_json::from_value(value["message"].clone()).map_err(|_| msg("Risposta del server non valida"))
+}
+
+// --- Gruppi ---------------------------------------------------------------
+
+#[tauri::command]
+pub async fn get_groups(state: State<'_, AppState>) -> Result<Vec<Group>> {
+    let value = call(state.inner(), reqwest::Method::GET, "/groups", None).await?;
+    Ok(serde_json::from_value(value["groups"].clone()).unwrap_or_default())
+}
+
+#[tauri::command]
+pub async fn create_group(state: State<'_, AppState>, name: String, members: Vec<String>) -> Result<i64> {
+    let value = call(state.inner(), reqwest::Method::POST, "/groups/create", Some(json!({ "name": name, "members": members }))).await?;
+    value["id"].as_i64().ok_or_else(|| msg("Risposta del server non valida"))
+}
+
+#[tauri::command]
+pub async fn add_group_members(state: State<'_, AppState>, id: i64, members: Vec<String>) -> Result<()> {
+    call(state.inner(), reqwest::Method::POST, "/groups/add", Some(json!({ "id": id, "members": members }))).await?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn rename_group(state: State<'_, AppState>, id: i64, name: String) -> Result<()> {
+    call(state.inner(), reqwest::Method::POST, "/groups/rename", Some(json!({ "id": id, "name": name }))).await?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn kick_group_member(state: State<'_, AppState>, id: i64, uuid: String) -> Result<()> {
+    call(state.inner(), reqwest::Method::POST, "/groups/kick", Some(json!({ "id": id, "uuid": uuid }))).await?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn leave_group(state: State<'_, AppState>, id: i64) -> Result<()> {
+    call(state.inner(), reqwest::Method::POST, "/groups/leave", Some(json!({ "id": id }))).await?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_group_messages(state: State<'_, AppState>, id: i64, after: Option<i64>) -> Result<Vec<GroupMessage>> {
+    let path = format!("/groups/messages?id={id}&after={}", after.unwrap_or(0).max(0));
+    let value = call(state.inner(), reqwest::Method::GET, &path, None).await?;
+    Ok(serde_json::from_value(value["messages"].clone()).unwrap_or_default())
+}
+
+#[tauri::command]
+pub async fn send_group_message(state: State<'_, AppState>, id: i64, text: String) -> Result<GroupMessage> {
+    let value = call(state.inner(), reqwest::Method::POST, "/groups/messages", Some(json!({ "id": id, "text": text }))).await?;
     serde_json::from_value(value["message"].clone()).map_err(|_| msg("Risposta del server non valida"))
 }
 

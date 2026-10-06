@@ -230,8 +230,7 @@ async function handlePresence(req, env, me) {
     .bind(now(), String(body.status || "online").slice(0, 20), String(body.detail || "").slice(0, 120), String(body.joinAddress || "").slice(0, 120), me)
     .run();
   // Totale dei messaggi non letti: il launcher lo mostra come badge senza richieste in più.
-  const unread = await env.DB.prepare(`SELECT COUNT(*) AS n FROM messages WHERE to_uuid = ? AND read_at = 0`).bind(me).first();
-  return json({ status: "ok", unread: unread?.n || 0 });
+  return json({ status: "ok", unread: await unreadTotal(env, me) });
 }
 
 // ---------------------------------------------------------------------------
@@ -286,6 +285,254 @@ async function handleSendMessage(req, env, me) {
     await env.DB.prepare(`DELETE FROM messages WHERE created < ?`).bind((now() - MESSAGE_RETENTION) * 1000).run();
   }
   return json({ message: { id: res.meta.last_row_id, from: me, to: other, text: body, created } });
+}
+
+// ---------------------------------------------------------------------------
+// Gruppi (chat di gruppo tra amici)
+// ---------------------------------------------------------------------------
+
+const GROUP_NAME_MAX = 40;
+const GROUP_MAX_MEMBERS = 25;
+
+const groupName = (v) => String(v || "").replace(/\s+/g, " ").trim().slice(0, GROUP_NAME_MAX);
+const uuidList = (v) => [...new Set((Array.isArray(v) ? v : []).map((u) => String(u || "").toLowerCase()).filter(Boolean))];
+
+async function isMember(env, groupId, uuid) {
+  return !!(await env.DB.prepare(`SELECT 1 FROM group_members WHERE group_id = ? AND uuid = ?`).bind(groupId, uuid).first());
+}
+
+/** Tiene solo gli uuid che sono amici di `me` (si possono aggiungere solo i propri amici). */
+async function onlyFriends(env, me, uuids) {
+  if (!uuids.length) return [];
+  const rows = await env.DB.prepare(
+    `SELECT friend_uuid FROM friends WHERE uuid = ? AND friend_uuid IN (${uuids.map(() => "?").join(",")})`,
+  )
+    .bind(me, ...uuids)
+    .all();
+  return (rows.results || []).map((r) => r.friend_uuid);
+}
+
+// Messaggi non letti di `me` in tutti i suoi gruppi, per gruppo.
+async function groupUnread(env, me) {
+  const rows = await env.DB.prepare(
+    `SELECT gm.group_id, COUNT(*) AS n FROM group_messages gm
+     JOIN group_members m ON m.group_id = gm.group_id AND m.uuid = ?1
+     WHERE gm.id > m.last_read AND gm.from_uuid != ?1 GROUP BY gm.group_id`,
+  )
+    .bind(me)
+    .all();
+  return Object.fromEntries((rows.results || []).map((r) => [r.group_id, r.n]));
+}
+
+async function unreadTotal(env, me) {
+  const d = await env.DB.prepare(`SELECT COUNT(*) AS n FROM messages WHERE to_uuid = ? AND read_at = 0`).bind(me).first();
+  const g = Object.values(await groupUnread(env, me)).reduce((a, b) => a + b, 0);
+  return (d?.n || 0) + g;
+}
+
+// GET /groups — i miei gruppi con membri (e se sono online) e non letti.
+async function handleGroups(env, me) {
+  const t = now();
+  const groups = await env.DB.prepare(
+    `SELECT g.id, g.name, g.owner FROM groups g JOIN group_members m ON m.group_id = g.id
+     WHERE m.uuid = ? ORDER BY g.name COLLATE NOCASE`,
+  )
+    .bind(me)
+    .all();
+  const list = groups.results || [];
+  if (!list.length) return json({ groups: [] });
+  const ids = list.map((g) => g.id);
+  const members = await env.DB.prepare(
+    `SELECT m.group_id, u.uuid, u.name, u.last_seen FROM group_members m JOIN users u ON u.uuid = m.uuid
+     WHERE m.group_id IN (${ids.map(() => "?").join(",")}) ORDER BY m.joined`,
+  )
+    .bind(...ids)
+    .all();
+  const unread = await groupUnread(env, me);
+  const byGroup = {};
+  for (const r of members.results || []) {
+    (byGroup[r.group_id] ||= []).push({ uuid: r.uuid, name: r.name, online: t - (r.last_seen || 0) < ONLINE_WINDOW });
+  }
+  return json({
+    groups: list.map((g) => ({ id: g.id, name: g.name, owner: g.owner, members: byGroup[g.id] || [], unread: unread[g.id] || 0 })),
+  });
+}
+
+// POST /groups/create { name, members: [uuid] }
+async function handleGroupCreate(req, env, me) {
+  const body = await req.json().catch(() => ({}));
+  const name = groupName(body.name);
+  if (!name) return json({ error: "Dai un nome al gruppo" }, 400);
+  const members = (await onlyFriends(env, me, uuidList(body.members))).slice(0, GROUP_MAX_MEMBERS - 1);
+  if (!members.length) return json({ error: "Scegli almeno un amico" }, 400);
+  const mine = await env.DB.prepare(`SELECT COUNT(*) AS n FROM groups WHERE owner = ?`).bind(me).first();
+  if ((mine?.n || 0) >= 30) return json({ error: "Hai raggiunto il numero massimo di gruppi" }, 400);
+
+  const t = now();
+  const res = await env.DB.prepare(`INSERT INTO groups (name, owner, created) VALUES (?, ?, ?)`).bind(name, me, t).run();
+  const id = res.meta.last_row_id;
+  await env.DB.batch(
+    [me, ...members].map((u) => env.DB.prepare(`INSERT OR IGNORE INTO group_members (group_id, uuid, joined) VALUES (?, ?, ?)`).bind(id, u, t)),
+  );
+  return json({ id });
+}
+
+// POST /groups/add { id, members: [uuid] } — ogni membro può aggiungere i propri amici.
+async function handleGroupAdd(req, env, me) {
+  const body = await req.json().catch(() => ({}));
+  const id = Number(body.id);
+  if (!(await isMember(env, id, me))) return json({ error: "Gruppo non trovato" }, 404);
+  const count = await env.DB.prepare(`SELECT COUNT(*) AS n FROM group_members WHERE group_id = ?`).bind(id).first();
+  const room = GROUP_MAX_MEMBERS - (count?.n || 0);
+  const add = (await onlyFriends(env, me, uuidList(body.members))).slice(0, Math.max(0, room));
+  if (!add.length) {
+    return json({ error: room <= 0 ? `Un gruppo può avere al massimo ${GROUP_MAX_MEMBERS} membri` : "Nessun amico da aggiungere" }, 400);
+  }
+  const t = now();
+  // i nuovi membri partono dall'ultimo messaggio: la cronologia non risulta tutta "non letta"
+  const last = await env.DB.prepare(`SELECT MAX(id) AS id FROM group_messages WHERE group_id = ?`).bind(id).first();
+  await env.DB.batch(
+    add.map((u) =>
+      env.DB.prepare(`INSERT OR IGNORE INTO group_members (group_id, uuid, joined, last_read) VALUES (?, ?, ?, ?)`).bind(id, u, t, last?.id || 0),
+    ),
+  );
+  return json({ status: "ok" });
+}
+
+// POST /groups/rename { id, name }
+async function handleGroupRename(req, env, me) {
+  const body = await req.json().catch(() => ({}));
+  const id = Number(body.id);
+  const name = groupName(body.name);
+  if (!name) return json({ error: "Nome non valido" }, 400);
+  if (!(await isMember(env, id, me))) return json({ error: "Gruppo non trovato" }, 404);
+  await env.DB.prepare(`UPDATE groups SET name = ? WHERE id = ?`).bind(name, id).run();
+  return json({ status: "ok" });
+}
+
+// POST /groups/kick { id, uuid } — solo il proprietario.
+async function handleGroupKick(req, env, me) {
+  const body = await req.json().catch(() => ({}));
+  const id = Number(body.id);
+  const target = String(body.uuid || "").toLowerCase();
+  const g = await env.DB.prepare(`SELECT owner FROM groups WHERE id = ?`).bind(id).first();
+  if (!g || g.owner !== me) return json({ error: "Solo chi ha creato il gruppo può rimuovere i membri" }, 403);
+  if (target === me) return json({ error: "Per uscire usa «Esci dal gruppo»" }, 400);
+  await env.DB.prepare(`DELETE FROM group_members WHERE group_id = ? AND uuid = ?`).bind(id, target).run();
+  return json({ status: "ok" });
+}
+
+// POST /groups/leave { id } — se esce il proprietario il gruppo passa al membro più anziano;
+// l'ultimo che esce cancella il gruppo e i suoi messaggi.
+async function handleGroupLeave(req, env, me) {
+  const body = await req.json().catch(() => ({}));
+  const id = Number(body.id);
+  if (!(await isMember(env, id, me))) return json({ status: "ok" });
+  await env.DB.prepare(`DELETE FROM group_members WHERE group_id = ? AND uuid = ?`).bind(id, me).run();
+  const next = await env.DB.prepare(`SELECT uuid FROM group_members WHERE group_id = ? ORDER BY joined LIMIT 1`).bind(id).first();
+  if (!next) {
+    await env.DB.batch([
+      env.DB.prepare(`DELETE FROM group_messages WHERE group_id = ?`).bind(id),
+      env.DB.prepare(`DELETE FROM groups WHERE id = ?`).bind(id),
+    ]);
+  } else {
+    await env.DB.prepare(`UPDATE groups SET owner = ? WHERE id = ? AND owner = ?`).bind(next.uuid, id, me).run();
+  }
+  return json({ status: "ok" });
+}
+
+const toGroupMessage = (r) => ({ id: r.id, groupId: r.group_id, from: r.from_uuid, name: r.name || "", text: r.body, created: r.created });
+
+// GET /groups/messages?id=&after= — ultimi 50 (o i nuovi dopo `after`); aggiorna last_read.
+async function handleGroupGetMessages(req, env, me) {
+  const url = new URL(req.url);
+  const id = Number(url.searchParams.get("id"));
+  const after = Math.max(0, parseInt(url.searchParams.get("after") || "0", 10) || 0);
+  if (!(await isMember(env, id, me))) return json({ error: "Gruppo non trovato" }, 404);
+  const select = `SELECT gm.*, u.name FROM group_messages gm LEFT JOIN users u ON u.uuid = gm.from_uuid WHERE gm.group_id = ?1`;
+  const rows = after
+    ? await env.DB.prepare(`${select} AND gm.id > ?2 ORDER BY gm.id ASC LIMIT 100`).bind(id, after).all()
+    : await env.DB.prepare(`SELECT * FROM (${select} ORDER BY gm.id DESC LIMIT 50) ORDER BY id ASC`).bind(id).all();
+  const messages = (rows.results || []).map(toGroupMessage);
+  const last = messages.length ? messages[messages.length - 1].id : 0;
+  if (last) {
+    await env.DB.prepare(`UPDATE group_members SET last_read = MAX(last_read, ?) WHERE group_id = ? AND uuid = ?`).bind(last, id, me).run();
+  }
+  return json({ messages });
+}
+
+// POST /groups/messages { id, text }
+async function handleGroupSendMessage(req, env, me, myName) {
+  const body = await req.json().catch(() => ({}));
+  const id = Number(body.id);
+  const text = String(body.text || "").replace(/\r\n?/g, "\n").trim();
+  if (!text) return json({ error: "Messaggio vuoto" }, 400);
+  if (text.length > MESSAGE_MAX) return json({ error: `Messaggio troppo lungo (massimo ${MESSAGE_MAX} caratteri)` }, 400);
+  if (!(await isMember(env, id, me))) return json({ error: "Gruppo non trovato" }, 404);
+  const recent = await env.DB.prepare(
+    `SELECT (SELECT COUNT(*) FROM messages WHERE from_uuid = ?1 AND created > ?2)
+          + (SELECT COUNT(*) FROM group_messages WHERE from_uuid = ?1 AND created > ?2) AS n`,
+  )
+    .bind(me, Date.now() - 60_000)
+    .first();
+  if ((recent?.n || 0) >= MESSAGES_PER_MINUTE) return json({ error: "Stai scrivendo troppo in fretta, aspetta un attimo" }, 429);
+
+  const created = Date.now();
+  const res = await env.DB.prepare(`INSERT INTO group_messages (group_id, from_uuid, body, created) VALUES (?, ?, ?, ?)`)
+    .bind(id, me, text, created)
+    .run();
+  const msgId = res.meta.last_row_id;
+  await env.DB.prepare(`UPDATE group_members SET last_read = ? WHERE group_id = ? AND uuid = ?`).bind(msgId, id, me).run();
+  if (Math.random() < 0.02) {
+    await env.DB.prepare(`DELETE FROM group_messages WHERE created < ?`).bind((now() - MESSAGE_RETENTION) * 1000).run();
+  }
+  return json({ message: { id: msgId, groupId: id, from: me, name: myName, text, created } });
+}
+
+// ---------------------------------------------------------------------------
+// Posta in arrivo: nuovi messaggi (privati e di gruppo) per le notifiche del launcher
+// ---------------------------------------------------------------------------
+
+// GET /inbox?dm=<id>&gm=<id> — messaggi ricevuti con id maggiore dei cursori. Senza cursori
+// restituisce solo i cursori attuali, così all'avvio non si notificano messaggi vecchi.
+async function handleInbox(req, env, me) {
+  const url = new URL(req.url);
+  const dm = parseInt(url.searchParams.get("dm") ?? "-1", 10);
+  const gm = parseInt(url.searchParams.get("gm") ?? "-1", 10);
+  const max = await env.DB.prepare(
+    `SELECT (SELECT COALESCE(MAX(id), 0) FROM messages) AS dm, (SELECT COALESCE(MAX(id), 0) FROM group_messages) AS gm`,
+  ).first();
+  const cursor = { dm: max?.dm || 0, gm: max?.gm || 0 };
+  if (!(dm >= 0) || !(gm >= 0)) return json({ cursor, messages: [], unread: await unreadTotal(env, me) });
+
+  const direct = await env.DB.prepare(
+    `SELECT m.id, m.from_uuid, m.body, m.created, u.name FROM messages m LEFT JOIN users u ON u.uuid = m.from_uuid
+     WHERE m.to_uuid = ? AND m.read_at = 0 AND m.id > ? ORDER BY m.id ASC LIMIT 20`,
+  )
+    .bind(me, dm)
+    .all();
+  const group = await env.DB.prepare(
+    `SELECT gm.id, gm.group_id, gm.from_uuid, gm.body, gm.created, u.name, g.name AS group_name
+     FROM group_messages gm JOIN group_members m ON m.group_id = gm.group_id AND m.uuid = ?1
+     JOIN groups g ON g.id = gm.group_id LEFT JOIN users u ON u.uuid = gm.from_uuid
+     WHERE gm.id > ?2 AND gm.id > m.last_read AND gm.from_uuid != ?1 ORDER BY gm.id ASC LIMIT 20`,
+  )
+    .bind(me, gm)
+    .all();
+  const messages = [
+    ...(direct.results || []).map((r) => ({ kind: "direct", id: r.id, from: r.from_uuid, name: r.name || "", text: r.body, created: r.created })),
+    ...(group.results || []).map((r) => ({
+      kind: "group",
+      id: r.id,
+      groupId: r.group_id,
+      groupName: r.group_name,
+      from: r.from_uuid,
+      name: r.name || "",
+      text: r.body,
+      created: r.created,
+    })),
+  ].sort((a, b) => a.created - b.created);
+  return json({ cursor, messages, unread: await unreadTotal(env, me) });
 }
 
 // ---------------------------------------------------------------------------
@@ -389,6 +636,15 @@ export default {
       if (path === "/presence" && req.method === "POST") return await handlePresence(req, env, me);
       if (path === "/messages" && req.method === "GET") return await handleGetMessages(req, env, me);
       if (path === "/messages" && req.method === "POST") return await handleSendMessage(req, env, me);
+      if (path === "/inbox" && req.method === "GET") return await handleInbox(req, env, me);
+      if (path === "/groups" && req.method === "GET") return await handleGroups(env, me);
+      if (path === "/groups/create" && req.method === "POST") return await handleGroupCreate(req, env, me);
+      if (path === "/groups/add" && req.method === "POST") return await handleGroupAdd(req, env, me);
+      if (path === "/groups/rename" && req.method === "POST") return await handleGroupRename(req, env, me);
+      if (path === "/groups/kick" && req.method === "POST") return await handleGroupKick(req, env, me);
+      if (path === "/groups/leave" && req.method === "POST") return await handleGroupLeave(req, env, me);
+      if (path === "/groups/messages" && req.method === "GET") return await handleGroupGetMessages(req, env, me);
+      if (path === "/groups/messages" && req.method === "POST") return await handleGroupSendMessage(req, env, me, user.name);
 
       return json({ error: "Not found" }, 404);
     } catch (e) {
