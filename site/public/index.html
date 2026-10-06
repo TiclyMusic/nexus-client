@@ -121,6 +121,7 @@
       --radius: 10px;
       --mono: "Geist Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
       --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+      --ease-window: cubic-bezier(0.16, 1, 0.3, 1);
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -141,7 +142,7 @@
 
     *, *::before, *::after { box-sizing: border-box; }
     * { margin: 0; }
-    html { -webkit-text-size-adjust: 100%; }
+    html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 84px; }
     body {
       background: var(--bg);
       color: var(--ink);
@@ -250,9 +251,9 @@
     .faq details { border-bottom: 1px solid var(--line); }
     .faq summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 24px; padding: 20px 0; font-weight: 500; }
     .faq summary::-webkit-details-marker { display: none; }
-    .faq summary::after { content: "+"; font-family: var(--mono); color: var(--muted); }
-    .faq details[open] summary::after { content: "−"; }
-    .faq details p { padding: 0 0 20px; color: var(--ink-2); max-width: 64ch; }
+    .faq summary::after { content: "+"; font-family: var(--mono); font-size: 20px; line-height: 1; color: var(--muted); transition: rotate .3s var(--ease), color .15s; }
+    .faq details[open] summary::after { rotate: 45deg; color: var(--ink); }
+    .faq details p { padding: 0 0 20px; color: var(--ink-2); max-width: 64ch; overflow: hidden; }
 
     /* Footer */
     footer { border-top: 1px solid var(--line); padding: 48px 0 56px; font-size: 14px; color: var(--muted); }
@@ -274,9 +275,11 @@
     .js .anim { opacity: 0; translate: 0 18px; transition: opacity .8s var(--ease), translate .8s var(--ease), scale 1s var(--ease); transition-delay: var(--d, 0ms); }
     .js .anim.in { opacity: 1; translate: 0 0; }
     .js .anim.done { transition-delay: 0ms; }
-    .js .hero .shot.anim { translate: 0 40px; scale: 0.985; }
-    .js .hero .shot.anim.in { translate: 0 0; scale: 1; }
-    .feature .shot.in:hover { translate: 0 -4px; }
+    .js .shot.anim, .js .video.anim { translate: 0 28px; scale: 0.9; filter: blur(8px); transform-origin: 50% 70%;
+      transition: opacity .9s var(--ease-window), translate 1s var(--ease-window), scale 1s var(--ease-window), filter .8s var(--ease-window); transition-delay: var(--d, 0ms); }
+    .js .shot.anim.in, .js .video.anim.in { translate: 0 0; scale: 1; filter: none; }
+    .js .shot.anim.done, .js .video.anim.done { transition: translate .5s var(--ease), box-shadow .5s var(--ease); }
+    .js .feature .shot.anim.done:hover { translate: 0 -4px; }
     .feature .shot { transition: opacity .8s var(--ease), translate .5s var(--ease), box-shadow .5s var(--ease); }
     .dl-row { transition: background-color .15s; }
     .dl-row:hover { background: color-mix(in srgb, var(--ink) 3%, transparent); }
@@ -284,8 +287,10 @@
     .faq summary { transition: color .15s; }
     .faq summary:hover { color: var(--accent); }
     @media (prefers-reduced-motion: reduce) {
-      .js .anim, .js .hero .shot.anim { opacity: 1; translate: none; scale: none; transition: none; }
-      .btn:hover, .feature .shot.in:hover { translate: none; }
+      html { scroll-behavior: auto; }
+      .js .anim, .js .shot.anim, .js .video.anim { opacity: 1; translate: none; scale: none; filter: none; transition: none; }
+      .faq summary::after { transition: none; }
+      .btn:hover, .js .feature .shot.anim.done:hover { translate: none; }
     }
 
     @media (max-width: 900px) {
@@ -587,7 +592,8 @@
       for (const e of entries) {
         if (!e.isIntersecting) continue;
         e.target.classList.add("in");
-        e.target.addEventListener("transitionend", () => e.target.classList.add("done"), { once: true });
+        const el = e.target;
+        el.addEventListener("transitionend", (ev) => { if (ev.target === el && ev.propertyName === "translate") el.classList.add("done"); });
         reveal.unobserve(e.target);
       }
     }, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
@@ -597,6 +603,26 @@
     const video = document.getElementById("promo");
     const toggle = document.getElementById("video-toggle");
     const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // FAQ: la risposta scorre in apertura e in chiusura invece di comparire di colpo.
+    document.querySelectorAll(".faq details").forEach((d) => {
+      const body = d.querySelector("p");
+      let anim = null;
+      d.querySelector("summary").addEventListener("click", (e) => {
+        if (reduceMotion) return;
+        e.preventDefault();
+        anim?.cancel();
+        if (d.open) {
+          d.classList.add("closing");
+          anim = body.animate([{ height: body.offsetHeight + "px", paddingBottom: "20px", opacity: 1 }, { height: "0px", paddingBottom: "0px", opacity: 0 }], { duration: 260, easing: "cubic-bezier(0.4, 0, 1, 1)" });
+          anim.onfinish = () => { d.open = false; anim = null; };
+        } else {
+          d.open = true;
+          anim = body.animate([{ height: "0px", paddingBottom: "0px", opacity: 0 }, { height: body.offsetHeight + "px", paddingBottom: "20px", opacity: 1 }], { duration: 340, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
+          anim.onfinish = () => { anim = null; };
+        }
+      });
+    });
     let userPaused = reduceMotion;
     const ICON_PLAY = '<svg viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 1.5v11l9-5.5z"/></svg>';
     const ICON_PAUSE = '<svg viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 1.5h3v11H3zM8 1.5h3v11H8z"/></svg>';
