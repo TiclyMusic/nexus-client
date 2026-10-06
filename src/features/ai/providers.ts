@@ -3,7 +3,7 @@
 // 2. API Personalizzata (BYOK - OpenAI, Groq, OpenRouter, NVIDIA NIM, ecc.)
 // 3. Ollama Locale (istanza Ollama installata dall'utente)
 import { listen } from "@tauri-apps/api/event";
-import { api } from "../../lib/api";
+import { api, isTauri } from "../../lib/api";
 import type { AiPrefs, ChatMessage } from "../../lib/types";
 
 export const LOCAL_MODEL_PRESETS = [
@@ -16,9 +16,12 @@ export const LOCAL_MODEL_PRESETS = [
 /** Streaming di una chat verso un server Ollama (locale o gestito) a un dato base URL. */
 async function streamOllama(baseUrl: string, model: string, messages: ChatMessage[], onDelta: (d: string) => void): Promise<string> {
   const requestId = crypto.randomUUID();
-  const unlisten = await listen<{ requestId: string; delta: string }>("ai-stream", (e) => {
-    if (e.payload.requestId === requestId) onDelta(e.payload.delta);
-  });
+  // Lo streaming arriva come evento Tauri; nel browser (dati di prova) arriva solo la risposta finale.
+  const unlisten = isTauri()
+    ? await listen<{ requestId: string; delta: string }>("ai-stream", (e) => {
+        if (e.payload.requestId === requestId) onDelta(e.payload.delta);
+      })
+    : () => {};
   try {
     return await api.ollamaChat(requestId, baseUrl, model, messages);
   } finally {
@@ -39,9 +42,12 @@ async function chatOllama(messages: ChatMessage[], prefs: AiPrefs, onDelta: (d: 
 
 async function chatCustom(messages: ChatMessage[], prefs: AiPrefs, onDelta: (d: string) => void): Promise<string> {
   const requestId = crypto.randomUUID();
-  const unlisten = await listen<{ requestId: string; delta: string }>("ai-stream", (e) => {
-    if (e.payload.requestId === requestId) onDelta(e.payload.delta);
-  });
+  // Lo streaming arriva come evento Tauri; nel browser (dati di prova) arriva solo la risposta finale.
+  const unlisten = isTauri()
+    ? await listen<{ requestId: string; delta: string }>("ai-stream", (e) => {
+        if (e.payload.requestId === requestId) onDelta(e.payload.delta);
+      })
+    : () => {};
   try {
     return await api.customApiChat(
       requestId,

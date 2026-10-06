@@ -4,33 +4,31 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Nexus Launcher – Launcher Minecraft gratis con mod, amici e AI</title>
-  <meta name="description" content="Scarica Nexus Launcher, il launcher Minecraft Java gratis e open-source: mod Modrinth, Fabric e Forge, amici online, hosting dei mondi e Copilot AI." />
+  <meta name="description" content="Nexus Launcher è un launcher open-source per Minecraft: Java Edition. Istanze isolate, mod da Modrinth, amici online e un Copilot AI locale. Per Windows, macOS e Linux." />
   <link rel="canonical" href="https://nexusmc.online/" />
   <link rel="alternate" hreflang="it" href="https://nexusmc.online/" />
   <link rel="alternate" hreflang="x-default" href="https://nexusmc.online/" />
-  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-  <meta name="author" content="Nexus Launcher" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
   <meta name="application-name" content="Nexus Launcher" />
-  <meta name="theme-color" content="#101510" />
-  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#f7f7f4" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0d0f0d" media="(prefers-color-scheme: dark)" />
+  <meta name="color-scheme" content="light dark" />
 
-  <!-- Open Graph / social -->
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Nexus Launcher" />
   <meta property="og:locale" content="it_IT" />
   <meta property="og:url" content="https://nexusmc.online/" />
-  <meta property="og:title" content="Nexus Launcher – il launcher Minecraft senza attriti" />
-  <meta property="og:description" content="Gratis e open-source. Mod da Modrinth, Fabric e Forge in un clic, amici online, hosting dei mondi e Copilot AI. Per Windows, macOS e Linux." />
+  <meta property="og:title" content="Nexus Launcher – il launcher open-source per Minecraft" />
+  <meta property="og:description" content="Istanze isolate, mod da Modrinth, amici online e un Copilot AI locale. Gratis per Windows, macOS e Linux." />
   <meta property="og:image" content="https://nexusmc.online/img/og.jpg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Nexus Launcher: schermata principale del launcher Minecraft" />
+  <meta property="og:image:alt" content="Nexus Launcher: la schermata principale con il Modding Copilot" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Nexus Launcher – il launcher Minecraft senza attriti" />
-  <meta name="twitter:description" content="Gratis e open-source. Mod, amici online, hosting dei mondi e Copilot AI per Minecraft Java Edition." />
+  <meta name="twitter:title" content="Nexus Launcher – il launcher open-source per Minecraft" />
+  <meta name="twitter:description" content="Istanze isolate, mod da Modrinth, amici online e un Copilot AI locale. Gratis per Windows, macOS e Linux." />
   <meta name="twitter:image" content="https://nexusmc.online/img/og.jpg" />
 
-  <!-- Icone -->
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/logo.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/img/apple-touch-icon.png" />
@@ -38,11 +36,8 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preconnect" href="https://nexus-site.matthias-peterlini.workers.dev" crossorigin />
-  <link rel="preconnect" href="https://api.github.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400;8..144,500;8..144,700;8..144,900&display=swap" rel="stylesheet" />
-  <!-- Solo le icone usate nella pagina (molto più leggero del font completo) -->
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@24,500,1&icon_names=auto_awesome,bolt,check,content_copy,deployed_code,desktop_windows,download,error,expand_more,extension,group,install_desktop,inventory_2,laptop_mac,new_releases,palette,public,shield,smart_toy,terminal,verified_user&display=block" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="preload" as="image" href="/img/app-copilot-1440.webp" imagesrcset="/img/app-copilot-1440.webp 1440w, /img/app-copilot-2880.webp 2880w" imagesizes="(min-width: 1240px) 1200px, 100vw" />
 
   <script type="application/ld+json">
   {
@@ -61,29 +56,29 @@
         "@id": "https://nexusmc.online/#org",
         "name": "Nexus Launcher",
         "url": "https://nexusmc.online/",
-        "logo": "https://nexusmc.online/img/icon-512.png"
+        "logo": "https://nexusmc.online/img/icon-512.png",
+        "sameAs": ["https://github.com/matthias-peterlini/Nexus-client"]
       },
       {
         "@type": "SoftwareApplication",
         "@id": "https://nexusmc.online/#app",
         "name": "Nexus Launcher",
-        "description": "Launcher gratuito e open-source per Minecraft: Java Edition con istanze isolate, mod da Modrinth, supporto Fabric, Quilt, Forge e NeoForge, amici con presenza online, hosting dei mondi senza aprire porte e Copilot AI.",
+        "description": "Launcher open-source per Minecraft: Java Edition con istanze isolate, mod da Modrinth, supporto Fabric, Quilt, Forge e NeoForge, amici con presenza online, hosting dei mondi senza aprire porte e un Copilot AI locale.",
         "url": "https://nexusmc.online/",
         "applicationCategory": "GameApplication",
         "applicationSubCategory": "Minecraft launcher",
         "operatingSystem": "Windows 10, Windows 11, macOS 10.15+, Linux",
         "inLanguage": "it-IT",
         "isAccessibleForFree": true,
-        "downloadUrl": "https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher-setup.exe",
+        "downloadUrl": "https://github.com/matthias-peterlini/Nexus-client/releases/latest",
         "image": "https://nexusmc.online/img/og.jpg",
-        "screenshot": "https://nexusmc.online/img/poster.jpg",
+        "screenshot": "https://nexusmc.online/img/app-copilot-1440.webp",
         "featureList": [
           "Login ufficiale con account Microsoft",
           "Istanze isolate Vanilla, Fabric, Quilt, Forge e NeoForge",
           "Mod, shader, resource pack e modpack da Modrinth",
-          "Amici con presenza online",
-          "Hosting dei mondi senza aprire porte del router",
-          "Copilot AI per creare istanze e risolvere i crash",
+          "Amici con presenza online e hosting dei mondi senza aprire porte",
+          "Copilot AI locale per creare istanze e analizzare i crash",
           "Download paralleli con verifica SHA1 e Java automatico"
         ],
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
@@ -93,14 +88,14 @@
         "@type": "FAQPage",
         "@id": "https://nexusmc.online/#faq",
         "mainEntity": [
-          { "@type": "Question", "name": "Nexus Launcher è gratis?", "acceptedAnswer": { "@type": "Answer", "text": "Sì. Nexus Launcher è gratuito e open-source, senza pubblicità e senza abbonamenti. Serve solo una copia originale di Minecraft: Java Edition." } },
-          { "@type": "Question", "name": "Serve un account Minecraft originale?", "acceptedAnswer": { "@type": "Answer", "text": "Sì. Accedi con l'account Microsoft con cui hai acquistato Minecraft: Java Edition. Il login avviene sulle pagine ufficiali di Microsoft: Nexus non vede né salva la tua password." } },
-          { "@type": "Question", "name": "Il mio account è al sicuro?", "acceptedAnswer": { "@type": "Answer", "text": "I token di accesso restano sul tuo PC, cifrati con AES-256-GCM e con la chiave nel portachiavi di sistema. Non vengono mai inviati a server di terze parti." } },
-          { "@type": "Question", "name": "Quali mod loader supporta?", "acceptedAnswer": { "@type": "Answer", "text": "Vanilla, Fabric, Quilt, Forge e NeoForge, sia per le release sia per gli snapshot. Ogni istanza è isolata, quindi puoi avere versioni e mod diverse senza conflitti." } },
-          { "@type": "Question", "name": "Come installo le mod?", "acceptedAnswer": { "@type": "Answer", "text": "Dalla sezione Esplora cerchi mod, shader, resource pack e modpack su Modrinth e li installi con un clic: le dipendenze vengono aggiunte in automatico." } },
-          { "@type": "Question", "name": "Posso giocare con gli amici senza aprire le porte del router?", "acceptedAnswer": { "@type": "Answer", "text": "Sì. Apri il mondo in LAN e avvia il tunnel di Nexus: ottieni un indirizzo pubblico da dare agli amici, che entrano da qualsiasi rete. Nel tab Amici vedi chi è online e a cosa sta giocando." } },
-          { "@type": "Question", "name": "Windows mostra \"Windows ha protetto il PC\": è normale?", "acceptedAnswer": { "@type": "Answer", "text": "Sì, succede con le app nuove non ancora firmate digitalmente. Clicca su Ulteriori informazioni e poi su Esegui comunque." } },
-          { "@type": "Question", "name": "Funziona su Mac o Linux?", "acceptedAnswer": { "@type": "Answer", "text": "Sì. Nexus Launcher è disponibile per Windows 10 e 11, per macOS 10.15 o successivo (Intel e Apple Silicon) e per Linux in formato AppImage, deb, rpm e pacchetto pacman per Arch Linux." } }
+          { "@type": "Question", "name": "Nexus Launcher è gratis?", "acceptedAnswer": { "@type": "Answer", "text": "Sì. È gratuito e open-source, senza pubblicità né abbonamenti. Serve una copia originale di Minecraft: Java Edition." } },
+          { "@type": "Question", "name": "Come si accede con l'account Microsoft?", "acceptedAnswer": { "@type": "Answer", "text": "Nexus mostra un codice che inserisci nella pagina di accesso ufficiale di Microsoft. La password non passa mai dal launcher; i token restano sul tuo computer, cifrati con AES-256-GCM e con la chiave nel portachiavi di sistema." } },
+          { "@type": "Question", "name": "Quali mod loader sono supportati?", "acceptedAnswer": { "@type": "Answer", "text": "Vanilla, Fabric, Quilt, Forge e NeoForge, sia per le release sia per gli snapshot. Ogni istanza è isolata: versioni e mod diverse non entrano in conflitto." } },
+          { "@type": "Question", "name": "Da dove arrivano le mod?", "acceptedAnswer": { "@type": "Answer", "text": "Da Modrinth. Cerchi mod, shader, resource pack e modpack (.mrpack) dentro il launcher e li installi con le dipendenze già risolte." } },
+          { "@type": "Question", "name": "Il Copilot invia i miei dati a un servizio esterno?", "acceptedAnswer": { "@type": "Answer", "text": "Non per forza. Il Copilot può funzionare interamente sul tuo computer con Ollama. In alternativa puoi collegare un'API compatibile con OpenAI usando una tua chiave." } },
+          { "@type": "Question", "name": "Posso giocare con gli amici senza aprire le porte del router?", "acceptedAnswer": { "@type": "Answer", "text": "Sì. Apri il mondo in LAN e avvia il tunnel: Nexus ti dà un indirizzo pubblico da condividere. Nella sezione Amici vedi chi è online e a cosa sta giocando." } },
+          { "@type": "Question", "name": "Perché Windows o macOS mostrano un avviso all'avvio?", "acceptedAnswer": { "@type": "Answer", "text": "Le build non sono ancora firmate digitalmente. Su Windows scegli Ulteriori informazioni e poi Esegui comunque; su macOS apri Impostazioni di Sistema, Privacy e sicurezza, e scegli Apri comunque." } },
+          { "@type": "Question", "name": "Su quali sistemi funziona?", "acceptedAnswer": { "@type": "Answer", "text": "Windows 10 e 11, macOS 10.15 o successivo (Intel e Apple Silicon) e Linux, con pacchetti AppImage, deb, rpm e un pacchetto pacman per Arch Linux." } }
         ]
       }
     ]
@@ -109,321 +104,398 @@
 
   <style>
     :root {
-      color-scheme: dark;
-      --primary: #8bd88e;
-      --on-primary: #00390f;
-      --primary-container: #0d5220;
-      --on-primary-container: #a6f5a8;
-      --tertiary: #a1ced7;
-      --tertiary-container: #1f4d55;
-      --on-tertiary-container: #bdeaf4;
-      --surface: #101510;
-      --surface-low: #181d18;
-      --surface-c: #1c211c;
-      --surface-high: #272b26;
-      --surface-highest: #313630;
-      --on-surface: #dfe4db;
-      --on-surface-variant: #c0c9bb;
-      --outline: #8a9386;
-      --outline-variant: #40493e;
-      --radius-xl: 28px;
-      --radius-l: 20px;
-      --ease: cubic-bezier(.2, 0, 0, 1);
+      --bg: #f7f7f4;
+      --surface: #ffffff;
+      --surface-2: #efefea;
+      --ink: #121412;
+      --ink-2: #3c423b;
+      --muted: #646b62;
+      --line: #e2e3dc;
+      --line-strong: #cfd1c8;
+      --accent: #15803d;
+      --accent-hover: #116b33;
+      --accent-ink: #ffffff;
+      --shot-shadow: 0 1px 2px rgba(17, 20, 17, 0.06), 0 24px 60px -28px rgba(17, 20, 17, 0.35);
+      --radius: 10px;
+      --mono: "Geist Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
     }
-    * { box-sizing: border-box; margin: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      background: var(--surface);
-      color: var(--on-surface);
-      font-family: "Roboto Flex", system-ui, -apple-system, "Segoe UI", sans-serif;
-      line-height: 1.55;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d0f0d;
+        --surface: #141714;
+        --surface-2: #1b1f1b;
+        --ink: #eceee9;
+        --ink-2: #c6cbc3;
+        --muted: #949b91;
+        --line: #252a25;
+        --line-strong: #343a33;
+        --accent: #4ade80;
+        --accent-hover: #6ee79a;
+        --accent-ink: #052e13;
+        --shot-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 30px 80px -30px rgba(0, 0, 0, 0.8);
+      }
     }
-    a { color: inherit; text-decoration: none; }
-    .icon {
-      font-family: "Material Symbols Rounded";
-      font-weight: normal; font-style: normal; font-size: 24px; line-height: 1;
-      display: inline-block; white-space: nowrap; direction: ltr; width: 1em; overflow: hidden;
-      font-feature-settings: "liga"; -webkit-font-feature-settings: "liga";
-    }
-    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
-    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-    .skip { position: absolute; left: 16px; top: -48px; z-index: 20; padding: 10px 16px; border-radius: 12px; background: var(--primary); color: var(--on-primary); font-weight: 600; }
-    .skip:focus { top: 12px; }
-    :focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; border-radius: 8px; }
 
-    /* Nav */
-    nav { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(14px); background: color-mix(in srgb, var(--surface) 78%, transparent); border-bottom: 1px solid var(--outline-variant); }
-    nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
-    .brand img { width: 34px; height: 34px; }
-    nav ul { display: flex; gap: 4px; list-style: none; padding: 0; }
-    nav ul a { display: block; padding: 8px 14px; border-radius: 999px; color: var(--on-surface-variant); font-size: 14px; font-weight: 500; transition: background .2s var(--ease); }
-    nav ul a:hover { background: var(--surface-high); color: var(--on-surface); }
+    *, *::before, *::after { box-sizing: border-box; }
+    * { margin: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font: 400 17px/1.6 "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    a { color: inherit; }
+    img { display: block; max-width: 100%; height: auto; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .skip { position: absolute; left: 16px; top: -48px; padding: 8px 14px; background: var(--ink); color: var(--bg); border-radius: 6px; z-index: 20; }
+    .skip:focus { top: 12px; }
+    .mono { font-family: var(--mono); }
+    .muted { color: var(--muted); }
+
+    /* Header */
+    header.site { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: saturate(1.4) blur(10px); border-bottom: 1px solid var(--line); }
+    header.site .wrap { display: flex; align-items: center; gap: 32px; height: 60px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 16px; text-decoration: none; letter-spacing: -0.01em; }
+    .brand img { width: 26px; height: 26px; }
+    nav.main { display: flex; gap: 24px; margin-left: 8px; }
+    nav.main a { font-size: 14px; color: var(--muted); text-decoration: none; }
+    nav.main a:hover { color: var(--ink); }
+    .header-cta { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+    .gh { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); text-decoration: none; }
+    .gh:hover { color: var(--ink); }
+    .gh svg { width: 18px; height: 18px; }
 
     /* Buttons */
-    .btn { display: inline-flex; align-items: center; gap: 10px; padding: 16px 28px; border-radius: 999px; font-weight: 600; font-size: 16px; border: 0; cursor: pointer; transition: border-radius .35s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease); }
-    .btn:hover { border-radius: 16px; }
-    .btn:active { transform: scale(.97); }
-    .btn-filled { background: var(--primary); color: var(--on-primary); box-shadow: 0 8px 28px -10px color-mix(in srgb, var(--primary) 60%, transparent); }
-    .btn-tonal { background: var(--surface-highest); color: var(--on-surface); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: 8px; font: inherit; font-size: 15px; font-weight: 500; text-decoration: none; border: 1px solid transparent; cursor: pointer; transition: background-color .15s, border-color .15s, color .15s; white-space: nowrap; }
+    .btn svg { width: 18px; height: 18px; }
+    .btn-primary { background: var(--accent); color: var(--accent-ink); }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary { background: var(--surface); color: var(--ink); border-color: var(--line-strong); }
+    .btn-secondary:hover { border-color: var(--ink-2); }
+    .btn-sm { height: 34px; padding: 0 12px; font-size: 14px; }
 
     /* Hero */
-    .hero { position: relative; padding: 88px 0 64px; text-align: center; }
-    .hero::before {
-      content: ""; position: absolute; inset: -120px 0 auto; height: 620px; z-index: -1;
-      background:
-        radial-gradient(40% 50% at 30% 30%, color-mix(in srgb, var(--primary) 22%, transparent), transparent 70%),
-        radial-gradient(35% 45% at 72% 40%, color-mix(in srgb, var(--tertiary) 18%, transparent), transparent 70%);
-      filter: blur(20px);
-    }
-    .hero .logo { width: 112px; height: 112px; margin: 0 auto 28px; display: block; animation: float 6s ease-in-out infinite; }
-    @keyframes float { 50% { transform: translateY(-10px) rotate(-2deg); } }
-    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; background: var(--primary-container); color: var(--on-primary-container); font-size: 13px; font-weight: 600; margin-bottom: 20px; }
-    .chip .icon { font-size: 18px; }
-    h1 { font-size: clamp(40px, 7vw, 76px); line-height: 1.02; font-weight: 900; letter-spacing: -.02em; font-variation-settings: "opsz" 144; }
-    h1 span { background: linear-gradient(120deg, var(--primary), var(--tertiary)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .lead { max-width: 660px; margin: 20px auto 36px; font-size: clamp(17px, 2.2vw, 20px); color: var(--on-surface-variant); }
-    .cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-    .meta { margin-top: 18px; font-size: 13px; color: var(--outline); }
-
-    /* Video */
-    .showcase { margin: 40px auto 0; max-width: 1000px; border-radius: var(--radius-xl); overflow: hidden; border: 1px solid var(--outline-variant); background: var(--surface-low) url("/img/poster.jpg") center / cover; box-shadow: 0 30px 80px -30px #000; aspect-ratio: 16 / 9; }
-    .showcase video { width: 100%; height: 100%; display: block; object-fit: cover; }
-
-    /* Sections */
-    section { padding: 80px 0; }
-    h2 { font-size: clamp(30px, 4.4vw, 46px); line-height: 1.1; font-weight: 800; letter-spacing: -.015em; text-align: center; }
-    .sub { text-align: center; color: var(--on-surface-variant); max-width: 640px; margin: 12px auto 44px; }
-
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-    .card { background: var(--surface-c); border-radius: var(--radius-l); padding: 26px; border: 1px solid var(--outline-variant); transition: transform .3s var(--ease), background .3s var(--ease), border-radius .4s var(--ease); }
-    .card:hover { transform: translateY(-4px); background: var(--surface-high); border-radius: 32px; }
-    .card .ic { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: var(--primary-container); color: var(--on-primary-container); margin-bottom: 18px; }
-    .card:nth-child(3n+2) .ic { background: var(--tertiary-container); color: var(--on-tertiary-container); }
-    .card:nth-child(3n) .ic { background: var(--surface-highest); color: var(--primary); }
-    .card h3 { font-size: 19px; font-weight: 700; margin-bottom: 6px; }
-    .card p { color: var(--on-surface-variant); font-size: 15px; }
+    .hero { padding: 88px 0 56px; }
+    .hero h1 { font-size: clamp(38px, 5.4vw, 64px); line-height: 1.05; font-weight: 600; letter-spacing: -0.035em; max-width: 15ch; }
+    .hero .lede { margin-top: 20px; font-size: clamp(17px, 1.6vw, 20px); color: var(--ink-2); max-width: 56ch; }
+    .hero .actions { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 12px; }
+    .hero .meta { margin-top: 16px; font-size: 13px; color: var(--muted); }
+    .hero .meta a { color: var(--muted); }
+    .shot { border-radius: var(--radius); border: 1px solid var(--line); box-shadow: var(--shot-shadow); background: #121512; overflow: hidden; }
+    .hero .shot { margin-top: 56px; }
 
     /* Loader */
-    .loaders { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 8px; list-style: none; padding: 0; }
-    .loaders li { padding: 10px 20px; border-radius: 999px; background: var(--surface-c); border: 1px solid var(--outline-variant); font-weight: 600; font-size: 15px; }
-    .loaders li b { color: var(--primary); font-weight: 700; }
+    .loaders { border-block: 1px solid var(--line); }
+    .loaders .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 32px; padding-block: 22px; }
+    .loaders .label { font-size: 13px; color: var(--muted); margin-right: 8px; }
+    .loaders ul { display: flex; flex-wrap: wrap; gap: 12px 32px; list-style: none; padding: 0; font-family: var(--mono); font-size: 14px; color: var(--ink-2); }
+
+    /* Sezioni */
+    section { padding: 112px 0; }
+    .eyebrow { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: 0.02em; }
+    h2 { font-size: clamp(28px, 3.2vw, 40px); line-height: 1.12; font-weight: 600; letter-spacing: -0.03em; }
+    h3 { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+    .section-head { max-width: 640px; margin-bottom: 56px; }
+    .section-head h2 { margin-top: 12px; }
+    .section-head p { margin-top: 16px; color: var(--ink-2); }
+
+    .feature { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 64px; align-items: center; }
+    .feature + .feature { margin-top: 112px; }
+    .feature.flip > .text { order: 2; }
+    .feature .text h2 { margin-top: 12px; }
+    .feature .text p { margin-top: 16px; color: var(--ink-2); }
+    .points { margin-top: 24px; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+    .points li { padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 15px; color: var(--ink-2); }
+    .feature .shot.narrow { max-width: 440px; margin-left: auto; }
+
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+    .grid > div { padding: 28px 28px 32px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .grid h3 { margin-bottom: 8px; }
+    .grid p { font-size: 15px; color: var(--muted); }
 
     /* Download */
-    .dl { background: linear-gradient(160deg, var(--primary-container), var(--surface-c) 70%); border-radius: 40px; padding: 56px 24px; text-align: center; border: 1px solid var(--outline-variant); }
-    .dl h2 { margin-bottom: 10px; }
-    .dl .options { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; max-width: 760px; margin: 32px auto 0; text-align: left; }
-    .opt { display: flex; align-items: center; gap: 16px; padding: 20px; border-radius: var(--radius-l); background: var(--surface); border: 1px solid var(--outline-variant); transition: border-color .2s, transform .2s var(--ease); }
-    .opt:hover { border-color: var(--primary); transform: translateY(-2px); }
-    .opt .icon { font-size: 32px; color: var(--primary); }
-    .opt b { display: block; font-size: 16px; }
-    .opt span.d { font-size: 13px; color: var(--on-surface-variant); }
-    .opt.primary { background: var(--primary); color: var(--on-primary); border-color: transparent; }
-    .opt.primary .icon, .opt.primary span.d { color: var(--on-primary); }
-    .platforms { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; max-width: 1000px; margin: 32px auto 0; text-align: left; }
-    .plat { display: flex; flex-direction: column; gap: 10px; padding: 18px; border-radius: 28px; background: color-mix(in srgb, var(--surface) 55%, transparent); border: 1px solid var(--outline-variant); }
-    .plat.current { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
-    .plat h3 { display: flex; align-items: center; gap: 8px; font-size: 18px; margin: 2px 4px 4px; }
-    .plat h3 .icon { color: var(--primary); }
-    .opt.unavailable { opacity: .45; pointer-events: none; }
-    .arch { display: flex; flex-direction: column; gap: 6px; }
-    .cmd { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--outline-variant); }
-    .cmd code { flex: 1; min-width: 0; font: 12px/1.5 ui-monospace, "Cascadia Code", Consolas, monospace; color: var(--on-surface-variant); overflow-wrap: anywhere; }
-    .copy { flex-shrink: 0; display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 10px; background: var(--surface-highest); color: var(--on-surface); cursor: pointer; }
-    .copy:hover { background: var(--primary-container); color: var(--on-primary-container); }
-    .notes { max-width: 1000px; margin: 22px auto 0; display: grid; gap: 8px; }
-    .notes .note { margin: 0; max-width: none; }
-    .note code { font-size: 13px; background: var(--surface-high); padding: 1px 6px; border-radius: 6px; }
-    .note { max-width: 760px; margin: 22px auto 0; display: flex; gap: 12px; align-items: flex-start; text-align: left; padding: 16px 18px; border-radius: 16px; background: var(--surface-low); color: var(--on-surface-variant); font-size: 14px; }
-    .note .icon { color: var(--tertiary); flex-shrink: 0; }
-    .note b { color: var(--on-surface); }
-
-    /* Steps */
-    .steps { counter-reset: s; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; list-style: none; padding: 0; }
-    .step { position: relative; padding: 26px 22px 22px; border-radius: var(--radius-l); background: var(--surface-low); }
-    .step::before { counter-increment: s; content: counter(s); position: absolute; top: -14px; left: 22px; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: var(--primary); color: var(--on-primary); font-weight: 800; }
-    .step h3 { font-size: 17px; margin: 6px 0 4px; }
-    .step p { color: var(--on-surface-variant); font-size: 14px; }
+    #download { background: var(--surface); border-block: 1px solid var(--line); }
+    .downloads { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--bg); }
+    .dl-group + .dl-group { border-top: 1px solid var(--line); }
+    .dl-group { display: grid; grid-template-columns: 220px minmax(0, 1fr); }
+    .dl-os { padding: 24px; border-right: 1px solid var(--line); }
+    .dl-os h3 { font-size: 18px; }
+    .dl-os p { margin-top: 4px; font-size: 13px; color: var(--muted); }
+    .dl-rows { display: flex; flex-direction: column; min-width: 0; }
+    .dl-row { display: grid; grid-template-columns: minmax(0, 1fr) 90px auto; align-items: center; gap: 16px; padding: 14px 24px; }
+    .dl-row + .dl-row { border-top: 1px solid var(--line); }
+    .dl-row .name { font-weight: 500; }
+    .dl-row .name small { display: block; font-size: 13px; font-weight: 400; color: var(--muted); }
+    .dl-row .size { font-family: var(--mono); font-size: 13px; color: var(--muted); text-align: right; }
+    .dl-row.current { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+    .dl-row.unavailable .btn { pointer-events: none; opacity: 0.45; }
+    .note { padding: 0 24px 16px; font-size: 13px; color: var(--muted); }
+    .cmd { display: flex; align-items: center; gap: 8px; margin: 0 24px 18px; padding: 10px 10px 10px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
+    .cmd code { flex: 1; min-width: 0; font-family: var(--mono); font-size: 13px; color: var(--ink-2); overflow-x: auto; white-space: nowrap; }
+    .copy { flex-shrink: 0; height: 30px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font: inherit; font-size: 13px; cursor: pointer; }
+    .copy:hover { border-color: var(--ink-2); }
+    .dl-foot { margin-top: 20px; font-size: 14px; color: var(--muted); }
 
     /* FAQ */
-    .faq { max-width: 820px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
-    .faq details { background: var(--surface-c); border: 1px solid var(--outline-variant); border-radius: var(--radius-l); transition: background .2s; }
-    .faq details[open] { background: var(--surface-high); }
-    .faq summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 22px; font-weight: 600; font-size: 17px; }
+    .faq-layout { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 64px; }
+    .faq { border-top: 1px solid var(--line); }
+    .faq details { border-bottom: 1px solid var(--line); }
+    .faq summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 24px; padding: 20px 0; font-weight: 500; }
     .faq summary::-webkit-details-marker { display: none; }
-    .faq summary .icon { color: var(--on-surface-variant); transition: transform .3s var(--ease); flex-shrink: 0; }
-    .faq details[open] summary .icon { transform: rotate(180deg); }
-    .faq details p { padding: 0 22px 20px; color: var(--on-surface-variant); }
+    .faq summary::after { content: "+"; font-family: var(--mono); color: var(--muted); }
+    .faq details[open] summary::after { content: "−"; }
+    .faq details p { padding: 0 0 20px; color: var(--ink-2); max-width: 64ch; }
 
-    footer { border-top: 1px solid var(--outline-variant); padding: 28px 0 40px; color: var(--outline); font-size: 13px; }
-    footer .wrap { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; }
+    /* Footer */
+    footer { border-top: 1px solid var(--line); padding: 48px 0 56px; font-size: 14px; color: var(--muted); }
+    .foot { display: grid; grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)); gap: 32px; }
+    .foot h4 { font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 12px; }
+    .foot ul { list-style: none; padding: 0; display: grid; gap: 8px; }
+    .foot a { text-decoration: none; }
+    .foot a:hover { color: var(--ink); }
+    .legal { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 13px; }
 
-    /* Animazioni solo con JS attivo: senza JS (e per i crawler) il contenuto è sempre visibile */
-    .js .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
-    .js .reveal.in { opacity: 1; transform: none; }
-    @media (prefers-reduced-motion: reduce) { .js .reveal { opacity: 1; transform: none; } .hero .logo { animation: none; } html { scroll-behavior: auto; } }
-    @media (max-width: 640px) {
-      nav ul li:not(.keep) { display: none; }
+    @media (max-width: 900px) {
+      nav.main, .gh span { display: none; }
+      .feature, .faq-layout { grid-template-columns: 1fr; gap: 32px; }
+      .feature.flip > .text { order: 0; }
+      .feature .shot.narrow { margin: 0 auto; }
+      .grid { grid-template-columns: 1fr 1fr; }
+      .dl-group { grid-template-columns: minmax(0, 1fr); }
+      .dl-os { border-right: 0; border-bottom: 1px solid var(--line); padding-bottom: 16px; }
+      .foot { grid-template-columns: 1fr 1fr; }
+      .foot > :first-child { grid-column: 1 / -1; }
+      section { padding: 80px 0; }
+    }
+    @media (max-width: 560px) {
+      .wrap { padding: 0 16px; }
       .hero { padding-top: 56px; }
-      .btn { width: 100%; justify-content: center; }
-      section { padding: 56px 0; }
-      .dl { padding: 40px 16px; border-radius: 28px; }
+      .hero .actions .btn { flex: 1 1 100%; }
+      .grid { grid-template-columns: 1fr; }
+      .dl-row { grid-template-columns: minmax(0, 1fr) auto; padding-inline: 16px; }
+      .dl-row .size { display: none; }
+      .note { padding-inline: 16px; }
+      .cmd { margin-inline: 16px; }
+      .header-cta .btn { display: none; }
     }
   </style>
-  <script>document.documentElement.classList.add("js");</script>
 </head>
 <body>
   <a class="skip" href="#main">Vai al contenuto</a>
-  <nav aria-label="Navigazione principale">
+
+  <header class="site">
     <div class="wrap">
-      <a class="brand" href="/" aria-label="Nexus Launcher, home"><img src="/logo.svg" alt="" width="34" height="34" />Nexus</a>
-      <ul>
-        <li><a href="#funzioni">Funzioni</a></li>
-        <li><a href="#faq">FAQ</a></li>
-        <li class="keep"><a href="#download">Scarica</a></li>
-      </ul>
+      <a class="brand" href="/"><img src="/logo.svg" alt="" width="26" height="26" />Nexus Launcher</a>
+      <nav class="main" aria-label="Sezioni">
+        <a href="#funzionalita">Funzionalità</a>
+        <a href="#download">Download</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <div class="header-cta">
+        <a class="gh" href="https://github.com/matthias-peterlini/Nexus-client">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+        </a>
+        <a class="btn btn-primary btn-sm" href="#download">Scarica</a>
+      </div>
     </div>
-  </nav>
+  </header>
 
   <main id="main">
-    <header class="hero">
+    <div class="hero">
       <div class="wrap">
-        <img class="logo" src="/logo.svg" alt="Logo di Nexus Launcher" width="112" height="112" />
-        <p class="chip"><span class="icon" aria-hidden="true">new_releases</span><span id="ver-chip">Nuova versione disponibile</span></p>
-        <h1>Il launcher <span>Minecraft</span>, senza attriti.</h1>
-        <p class="lead">Nexus Launcher è il launcher <strong>gratis e open-source</strong> per Minecraft: Java Edition. Istanze isolate, mod da Modrinth in un clic, Fabric e Forge, amici con presenza online e un Copilot AI che risolve i crash al posto tuo.</p>
-        <div class="cta">
-          <a class="btn btn-filled" id="hero-dl" href="#download"><span class="icon" aria-hidden="true">download</span><span id="hero-dl-label">Scarica gratis</span></a>
-          <a class="btn btn-tonal" href="#funzioni"><span class="icon" aria-hidden="true">auto_awesome</span>Scopri le funzioni</a>
+        <h1>Il launcher open&#8209;source per Minecraft: Java Edition.</h1>
+        <p class="lede">Istanze, mod e amici in un'unica app. Nexus scarica il Java giusto, risolve le dipendenze delle mod e prepara le istanze per te. Gratuito e senza pubblicità.</p>
+        <div class="actions">
+          <a class="btn btn-primary" id="hero-dl" href="#download">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M10 3v10m0 0l-4-4m4 4l4-4M4 16h12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span id="hero-dl-label">Scarica Nexus Launcher</span>
+          </a>
+          <a class="btn btn-secondary" href="#download">Tutte le piattaforme</a>
         </div>
-        <p class="meta" id="meta">Windows · macOS · Linux · gratis</p>
-        <div class="showcase reveal">
-          <video data-src="https://nexus-site.matthias-peterlini.workers.dev/media/nexus-promo.mp4" poster="/img/poster.jpg" muted loop playsinline preload="none" width="1280" height="720" aria-label="Video di presentazione di Nexus Launcher"></video>
+        <p class="meta mono" id="hero-meta">Windows · macOS · Linux</p>
+
+        <div class="shot">
+          <img src="/img/app-copilot-1440.webp" srcset="/img/app-copilot-1440.webp 1440w, /img/app-copilot-2880.webp 2880w" sizes="(min-width: 1240px) 1200px, 100vw" width="1440" height="900" alt="Schermata principale di Nexus Launcher: l'istanza Survival Performance e il Modding Copilot che propone una nuova istanza Fabric con Iris e shader" fetchpriority="high" />
         </div>
       </div>
-    </header>
+    </div>
 
-    <section id="funzioni" aria-labelledby="funzioni-title">
+    <div class="loaders">
       <div class="wrap">
-        <h2 id="funzioni-title" class="reveal">Tutto quello che serve a un launcher Minecraft moderno</h2>
-        <p class="sub reveal">Niente più cartelle .minecraft da sistemare a mano: Nexus scarica, installa e aggiorna tutto per te.</p>
-        <div class="grid">
-          <article class="card reveal"><div class="ic"><span class="icon" aria-hidden="true">verified_user</span></div><h3>Login Microsoft ufficiale</h3><p>Accesso sicuro con il tuo account Microsoft. I token restano sul tuo PC, cifrati e salvati nel portachiavi di sistema.</p></article>
-          <article class="card reveal"><div class="ic"><span class="icon" aria-hidden="true">deployed_code</span></div><h3>Istanze isolate</h3><p>Vanilla, Fabric, Quilt, Forge e NeoForge, release e snapshot. Ogni istanza ha le sue mod: clona, ripara, elimina.</p></article>
-          <article class="card reveal"><div class="ic"><span class="icon" aria-hidden="true">extension</span></div><h3>Mod da Modrinth</h3><p>Cerca mod, shader, resource pack e modpack (.mrpack). Le dipendenze si installano da sole.</p></article>
-          <article class="card reveal"><div class="ic"><span class="icon" aria-hidden="true">group</span></div><h3>Amici e presenza</h3><p>Vedi chi è online e a cosa sta giocando. Invita su WhatsApp chi non ha ancora Nexus.</p></article>
-          <article class="card reveal"><div class="ic"><span class="icon" aria-hidden="true">public</span></div><h3>Hosting del mondo</h3><p>Apri il tuo mondo agli amici senza configurare il router: Nexus crea il tunnel e ti dà l'indirizzo da condividere.</p></article>
-          <article class="card reveal"><div class="ic"><span class="icon" aria-hidden="true">smart_toy</span></div><h3>Modding Copilot</h3><p>L'AI crea istanze, consiglia mod e analizza i crash proponendo soluzioni con un clic. Anche 100% locale con Ollama.</p></article>
-          <article class="card reveal"><div class="ic"><span class="icon" aria-hidden="true">bolt</span></div><h3>Download paralleli</h3><p>Librerie e asset scaricati in parallelo con verifica SHA1. Il Java giusto viene scaricato in automatico.</p></article>
-          <article class="card reveal"><div class="ic"><span class="icon" aria-hidden="true">palette</span></div><h3>Material You</h3><p>Interfaccia Material 3 Expressive con palette dinamica: scegli il colore che preferisci.</p></article>
-          <article class="card reveal"><div class="ic"><span class="icon" aria-hidden="true">terminal</span></div><h3>Console integrata</h3><p>Log di download e di gioco in tempo reale, sempre a portata di mano.</p></article>
+        <span class="label">Supporta</span>
+        <ul>
+          <li>Vanilla</li>
+          <li>Fabric</li>
+          <li>Quilt</li>
+          <li>Forge</li>
+          <li>NeoForge</li>
+          <li>Modrinth</li>
+          <li>.mrpack</li>
+        </ul>
+      </div>
+    </div>
+
+    <section id="funzionalita" aria-label="Funzionalità" style="padding-top: 96px">
+      <div class="wrap">
+        <div class="feature">
+          <div class="text">
+            <p class="eyebrow">Istanze</p>
+            <h2>Ogni installazione è separata dalle altre.</h2>
+            <p>Ogni istanza ha la sua versione di Minecraft, il suo mod loader e le sue mod. Puoi tenere un modpack tecnico su Forge e una survival leggera su Fabric senza che si disturbino.</p>
+            <ul class="points">
+              <li>Release e snapshot, con Fabric, Quilt, Forge e NeoForge</li>
+              <li>Mod attivabili e disattivabili senza cancellarle</li>
+              <li>Clona, ripara ed elimina un'istanza in un clic</li>
+            </ul>
+          </div>
+          <div class="shot">
+            <img src="/img/app-instance-1200.webp" srcset="/img/app-instance-1200.webp 1200w, /img/app-instance-2400.webp 2400w" sizes="(min-width: 900px) 680px, 100vw" width="1200" height="442" loading="lazy" alt="Pagina di un'istanza con l'elenco delle mod installate: Sodium, Lithium, Fabric API e Iris Shaders" />
+          </div>
+        </div>
+
+        <div class="feature flip">
+          <div class="text">
+            <p class="eyebrow">Modding Copilot</p>
+            <h2>Descrivi cosa vuoi giocare. Il Copilot prepara l'istanza.</h2>
+            <p>Chiedi, per esempio, una survival leggera con shader: il Copilot propone versione, mod loader, mod e shader compatibili. Controlli la proposta e la esegui con un clic.</p>
+            <ul class="points">
+              <li>Funziona in locale con Ollama, senza chiavi API</li>
+              <li>Installa mod da Modrinth e regola RAM e parametri JVM</li>
+              <li>Legge il log di un crash e propone come risolverlo</li>
+            </ul>
+          </div>
+          <div class="shot narrow">
+            <img src="/img/copilot-panel-600.webp" srcset="/img/copilot-panel-600.webp 600w, /img/copilot-panel-1000.webp 1000w" sizes="440px" width="600" height="685" loading="lazy" alt="Il Modding Copilot propone un'istanza Fabric 1.21.1 con Iris, Lithium, FerriteCore e lo shader Complementary Reimagined" />
+          </div>
+        </div>
+
+        <div class="feature">
+          <div class="text">
+            <p class="eyebrow">Amici</p>
+            <h2>Vedi chi è online ed entra nel suo mondo.</h2>
+            <p>Aggiungi gli amici con il loro nome Minecraft e guarda a cosa stanno giocando. Se qualcuno ospita un mondo, ti basta un clic per ottenere l'indirizzo.</p>
+            <ul class="points">
+              <li>Ospita un mondo in LAN senza aprire porte del router</li>
+              <li>Presenza in tempo reale: online, in gioco, mondo aperto</li>
+              <li>Invita su WhatsApp chi non usa ancora Nexus</li>
+            </ul>
+          </div>
+          <div class="shot">
+            <img src="/img/app-friends-1200.webp" srcset="/img/app-friends-1200.webp 1200w, /img/app-friends-2400.webp 2400w" sizes="(min-width: 900px) 680px, 100vw" width="1200" height="717" loading="lazy" alt="Sezione Amici: un amico ospita un mondo con il pulsante Entra, altri sono online o in gioco" />
+          </div>
         </div>
       </div>
     </section>
 
-    <section id="loader" aria-labelledby="loader-title" style="padding-top:0">
+    <section aria-labelledby="dettagli-title" style="padding-top: 0">
       <div class="wrap">
-        <h2 id="loader-title" class="reveal">Tutti i mod loader, tutte le versioni</h2>
-        <p class="sub reveal">Release e snapshot: scegli versione e mod loader, Nexus pensa al resto.</p>
-        <ul class="loaders reveal">
-          <li><b>Vanilla</b></li>
-          <li><b>Fabric</b></li>
-          <li><b>Quilt</b></li>
-          <li><b>Forge</b></li>
-          <li><b>NeoForge</b></li>
-          <li>Modpack <b>.mrpack</b></li>
-          <li>Shader &amp; resource pack</li>
-        </ul>
+        <div class="section-head">
+          <p class="eyebrow">Dettagli</p>
+          <h2 id="dettagli-title">Le cose noiose le fa il launcher.</h2>
+        </div>
+        <div class="grid">
+          <div><h3>Login Microsoft ufficiale</h3><p>Accesso con codice sulla pagina di Microsoft. I token restano sul tuo computer, cifrati con AES-256-GCM.</p></div>
+          <div><h3>Java automatico</h3><p>Scarica il runtime Java ufficiale richiesto da ogni versione di Minecraft. Niente da installare a mano.</p></div>
+          <div><h3>Download verificati</h3><p>Librerie, asset e client scaricati in parallelo e controllati con SHA1.</p></div>
+          <div><h3>Modrinth integrato</h3><p>Mod, shader, resource pack e modpack .mrpack con dipendenze risolte in automatico.</p></div>
+          <div><h3>Console integrata</h3><p>Log di download e di gioco in tempo reale, utili quando qualcosa non parte.</p></div>
+          <div><h3>Tema personalizzabile</h3><p>Interfaccia Material 3 con il colore che preferisci.</p></div>
+        </div>
       </div>
     </section>
 
     <section id="download" aria-labelledby="download-title">
       <div class="wrap">
-        <div class="dl reveal">
+        <div class="section-head">
+          <p class="eyebrow">Download</p>
           <h2 id="download-title">Scarica Nexus Launcher</h2>
-          <p class="sub" style="margin-bottom:0" id="dl-sub">Gratis, open-source, nessuna pubblicità.</p>
-          <div class="platforms">
-            <div class="plat" data-os="windows">
-              <h3><span class="icon" aria-hidden="true">desktop_windows</span>Windows</h3>
-              <a class="opt primary" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher-setup.exe" data-file="windows.exe">
-                <span class="icon" aria-hidden="true">install_desktop</span>
-                <span><b>Installer (.exe)</b><span class="d">Windows 10/11 · consigliato</span></span>
-              </a>
-              <a class="opt" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.msi" data-file="windows.msi">
-                <span class="icon" aria-hidden="true">inventory_2</span>
-                <span><b>Pacchetto MSI</b><span class="d">Installazioni gestite</span></span>
-              </a>
+          <p id="dl-sub">Gratuito per Windows, macOS e Linux.</p>
+        </div>
+
+        <div class="downloads">
+          <div class="dl-group" data-os="windows">
+            <div class="dl-os"><h3>Windows</h3><p>Windows 10 e 11, 64 bit</p></div>
+            <div class="dl-rows">
+              <div class="dl-row" data-file="nexus-launcher-setup.exe">
+                <span class="name">Installer<small>nexus-launcher-setup.exe · consigliato</small></span>
+                <span class="size">—</span>
+                <a class="btn btn-secondary btn-sm" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher-setup.exe">Scarica</a>
+              </div>
+              <div class="dl-row" data-file="nexus-launcher.msi">
+                <span class="name">Pacchetto MSI<small>nexus-launcher.msi · per installazioni gestite</small></span>
+                <span class="size">—</span>
+                <a class="btn btn-secondary btn-sm" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.msi">Scarica</a>
+              </div>
+              <p class="note">Se compare "Windows ha protetto il PC", scegli Ulteriori informazioni → Esegui comunque.</p>
             </div>
-            <div class="plat" data-os="macos">
-              <h3><span class="icon" aria-hidden="true">laptop_mac</span>macOS</h3>
-              <a class="opt primary" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.dmg" data-file="macos.dmg">
-                <span class="icon" aria-hidden="true">install_desktop</span>
-                <span><b>Immagine disco (.dmg)</b><span class="d">macOS 10.15+ · Intel e Apple Silicon</span></span>
-              </a>
+          </div>
+
+          <div class="dl-group" data-os="macos">
+            <div class="dl-os"><h3>macOS</h3><p>10.15 o successivo · Intel e Apple Silicon</p></div>
+            <div class="dl-rows">
+              <div class="dl-row" data-file="nexus-launcher.dmg">
+                <span class="name">Immagine disco<small>nexus-launcher.dmg · universale</small></span>
+                <span class="size">—</span>
+                <a class="btn btn-secondary btn-sm" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.dmg">Scarica</a>
+              </div>
+              <p class="note">Trascina Nexus in Applicazioni. Se macOS lo blocca al primo avvio: Impostazioni di Sistema → Privacy e sicurezza → Apri comunque.</p>
             </div>
-            <div class="plat" data-os="linux">
-              <h3><span class="icon" aria-hidden="true">terminal</span>Linux</h3>
-              <a class="opt primary" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.AppImage" data-file="linux.appimage">
-                <span class="icon" aria-hidden="true">install_desktop</span>
-                <span><b>AppImage</b><span class="d">Qualsiasi distribuzione</span></span>
-              </a>
-              <a class="opt" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.deb" data-file="linux.deb">
-                <span class="icon" aria-hidden="true">inventory_2</span>
-                <span><b>.deb</b><span class="d">Ubuntu, Debian, Mint</span></span>
-              </a>
-              <a class="opt" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.rpm" data-file="linux.rpm">
-                <span class="icon" aria-hidden="true">inventory_2</span>
-                <span><b>.rpm</b><span class="d">Fedora, openSUSE</span></span>
-              </a>
-              <div class="arch">
-                <a class="opt" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.pkg.tar.zst" data-file="linux.pacman">
-                  <span class="icon" aria-hidden="true">inventory_2</span>
-                  <span><b>Arch Linux (pacman)</b><span class="d">Arch, Manjaro, EndeavourOS</span></span>
-                </a>
-                <div class="cmd">
-                  <code id="arch-cmd">curl -LO https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.pkg.tar.zst && sudo pacman -U nexus-launcher.pkg.tar.zst</code>
-                  <button type="button" class="copy" data-copy="arch-cmd" aria-label="Copia il comando per Arch Linux"><span class="icon" aria-hidden="true">content_copy</span></button>
-                </div>
+          </div>
+
+          <div class="dl-group" data-os="linux">
+            <div class="dl-os"><h3>Linux</h3><p>x86_64</p></div>
+            <div class="dl-rows">
+              <div class="dl-row" data-file="nexus-launcher.AppImage">
+                <span class="name">AppImage<small>Qualsiasi distribuzione · rendilo eseguibile con chmod +x</small></span>
+                <span class="size">—</span>
+                <a class="btn btn-secondary btn-sm" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.AppImage">Scarica</a>
+              </div>
+              <div class="dl-row" data-file="nexus-launcher.deb">
+                <span class="name">.deb<small>Debian, Ubuntu, Linux Mint</small></span>
+                <span class="size">—</span>
+                <a class="btn btn-secondary btn-sm" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.deb">Scarica</a>
+              </div>
+              <div class="dl-row" data-file="nexus-launcher.rpm">
+                <span class="name">.rpm<small>Fedora, openSUSE</small></span>
+                <span class="size">—</span>
+                <a class="btn btn-secondary btn-sm" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.rpm">Scarica</a>
+              </div>
+              <div class="dl-row" data-file="nexus-launcher.pkg.tar.zst">
+                <span class="name">Arch Linux<small>Arch, Manjaro, EndeavourOS · pacchetto pacman</small></span>
+                <span class="size">—</span>
+                <a class="btn btn-secondary btn-sm" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.pkg.tar.zst">Scarica</a>
+              </div>
+              <div class="cmd">
+                <code id="arch-cmd">curl -LO https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.pkg.tar.zst &amp;&amp; sudo pacman -U nexus-launcher.pkg.tar.zst</code>
+                <button type="button" class="copy" data-copy="arch-cmd">Copia</button>
               </div>
             </div>
           </div>
-          <div class="notes">
-            <p class="note"><span class="icon" aria-hidden="true">shield</span><span><b>Windows:</b> se compare "Windows ha protetto il PC", clicca <b>Ulteriori informazioni → Esegui comunque</b>.</span></p>
-            <p class="note"><span class="icon" aria-hidden="true">shield</span><span><b>macOS:</b> trascina Nexus in Applicazioni. Se al primo avvio macOS lo blocca, vai in <b>Impostazioni di Sistema → Privacy e sicurezza → Apri comunque</b>.</span></p>
-            <p class="note"><span class="icon" aria-hidden="true">shield</span><span><b>Linux:</b> rendi eseguibile l'AppImage (<code>chmod +x nexus-launcher.AppImage</code>) e avvialo. Su <b>Arch</b> basta il comando qui sopra.</span></p>
-          </div>
         </div>
-      </div>
-    </section>
 
-    <section id="installazione" aria-labelledby="install-title">
-      <div class="wrap">
-        <h2 id="install-title" class="reveal">Pronto in un minuto</h2>
-        <p class="sub reveal">Serve solo un account Microsoft che possiede Minecraft: Java Edition.</p>
-        <ol class="steps">
-          <li class="step reveal"><h3>Scarica e installa</h3><p>Scegli il pacchetto per Windows, macOS o Linux. Nessun Java da installare a mano.</p></li>
-          <li class="step reveal"><h3>Accedi con Microsoft</h3><p>Vai in Account, clicca "Accedi con Microsoft" e inserisci il codice che ti mostra Nexus.</p></li>
-          <li class="step reveal"><h3>Crea un'istanza</h3><p>Scegli versione e mod loader. Nexus scarica tutto in parallelo.</p></li>
-          <li class="step reveal"><h3>Gioca con gli amici</h3><p>Aggiungili dal tab Amici e unisciti ai loro mondi con un clic.</p></li>
-        </ol>
+        <p class="dl-foot">Tutte le versioni e le note di rilascio sono su <a href="https://github.com/matthias-peterlini/Nexus-client/releases">GitHub Releases</a>.</p>
       </div>
     </section>
 
     <section id="faq" aria-labelledby="faq-title">
-      <div class="wrap">
-        <h2 id="faq-title" class="reveal">Domande frequenti</h2>
-        <p class="sub reveal">Tutto quello che c'è da sapere prima di scaricare.</p>
+      <div class="wrap faq-layout">
+        <div>
+          <p class="eyebrow">FAQ</p>
+          <h2 id="faq-title" style="margin-top: 12px">Domande frequenti</h2>
+        </div>
         <div class="faq">
-          <details class="reveal"><summary>Nexus Launcher è gratis?<span class="icon" aria-hidden="true">expand_more</span></summary><p>Sì. Nexus Launcher è gratuito e open-source, senza pubblicità e senza abbonamenti. Serve solo una copia originale di Minecraft: Java Edition.</p></details>
-          <details class="reveal"><summary>Serve un account Minecraft originale?<span class="icon" aria-hidden="true">expand_more</span></summary><p>Sì. Accedi con l'account Microsoft con cui hai acquistato Minecraft: Java Edition. Il login avviene sulle pagine ufficiali di Microsoft: Nexus non vede né salva la tua password.</p></details>
-          <details class="reveal"><summary>Il mio account è al sicuro?<span class="icon" aria-hidden="true">expand_more</span></summary><p>I token di accesso restano sul tuo PC, cifrati con AES-256-GCM e con la chiave nel portachiavi di sistema. Non vengono mai inviati a server di terze parti.</p></details>
-          <details class="reveal"><summary>Quali mod loader supporta?<span class="icon" aria-hidden="true">expand_more</span></summary><p>Vanilla, Fabric, Quilt, Forge e NeoForge, sia per le release sia per gli snapshot. Ogni istanza è isolata, quindi puoi avere versioni e mod diverse senza conflitti.</p></details>
-          <details class="reveal"><summary>Come installo le mod?<span class="icon" aria-hidden="true">expand_more</span></summary><p>Dalla sezione Esplora cerchi mod, shader, resource pack e modpack su Modrinth e li installi con un clic: le dipendenze vengono aggiunte in automatico.</p></details>
-          <details class="reveal"><summary>Posso giocare con gli amici senza aprire le porte del router?<span class="icon" aria-hidden="true">expand_more</span></summary><p>Sì. Apri il mondo in LAN e avvia il tunnel di Nexus: ottieni un indirizzo pubblico da dare agli amici, che entrano da qualsiasi rete. Nel tab Amici vedi chi è online e a cosa sta giocando.</p></details>
-          <details class="reveal"><summary>Windows mostra "Windows ha protetto il PC": è normale?<span class="icon" aria-hidden="true">expand_more</span></summary><p>Sì, succede con le app nuove non ancora firmate digitalmente. Clicca su Ulteriori informazioni e poi su Esegui comunque.</p></details>
-          <details class="reveal"><summary>Funziona su Mac o Linux?<span class="icon" aria-hidden="true">expand_more</span></summary><p>Sì. Nexus Launcher è disponibile per Windows 10 e 11, per macOS 10.15 o successivo (Intel e Apple Silicon) e per Linux in formato AppImage, deb, rpm e pacchetto pacman per Arch Linux.</p></details>
+          <details><summary>Nexus Launcher è gratis?</summary><p>Sì. È gratuito e open-source, senza pubblicità né abbonamenti. Serve una copia originale di Minecraft: Java Edition.</p></details>
+          <details><summary>Come si accede con l'account Microsoft?</summary><p>Nexus mostra un codice che inserisci nella pagina di accesso ufficiale di Microsoft. La password non passa mai dal launcher; i token restano sul tuo computer, cifrati con AES-256-GCM e con la chiave nel portachiavi di sistema.</p></details>
+          <details><summary>Quali mod loader sono supportati?</summary><p>Vanilla, Fabric, Quilt, Forge e NeoForge, sia per le release sia per gli snapshot. Ogni istanza è isolata: versioni e mod diverse non entrano in conflitto.</p></details>
+          <details><summary>Da dove arrivano le mod?</summary><p>Da Modrinth. Cerchi mod, shader, resource pack e modpack (.mrpack) dentro il launcher e li installi con le dipendenze già risolte.</p></details>
+          <details><summary>Il Copilot invia i miei dati a un servizio esterno?</summary><p>Non per forza. Il Copilot può funzionare interamente sul tuo computer con Ollama. In alternativa puoi collegare un'API compatibile con OpenAI usando una tua chiave.</p></details>
+          <details><summary>Posso giocare con gli amici senza aprire le porte del router?</summary><p>Sì. Apri il mondo in LAN e avvia il tunnel: Nexus ti dà un indirizzo pubblico da condividere. Nella sezione Amici vedi chi è online e a cosa sta giocando.</p></details>
+          <details><summary>Perché Windows o macOS mostrano un avviso all'avvio?</summary><p>Le build non sono ancora firmate digitalmente. Su Windows scegli Ulteriori informazioni e poi Esegui comunque; su macOS apri Impostazioni di Sistema, Privacy e sicurezza, e scegli Apri comunque.</p></details>
+          <details><summary>Su quali sistemi funziona?</summary><p>Windows 10 e 11, macOS 10.15 o successivo (Intel e Apple Silicon) e Linux, con pacchetti AppImage, deb, rpm e un pacchetto pacman per Arch Linux.</p></details>
         </div>
       </div>
     </section>
@@ -431,60 +503,66 @@
 
   <footer>
     <div class="wrap">
-      <span>© <span id="year">2026</span> Nexus Launcher · nexusmc.online</span>
-      <span>Non affiliato con Mojang Studios o Microsoft. Minecraft è un marchio di Mojang Synergies AB.</span>
+      <div class="foot">
+        <div>
+          <a class="brand" href="/"><img src="/logo.svg" alt="" width="26" height="26" />Nexus Launcher</a>
+          <p style="margin-top: 12px; max-width: 36ch">Launcher open-source per Minecraft: Java Edition.</p>
+        </div>
+        <div>
+          <h4>Prodotto</h4>
+          <ul>
+            <li><a href="#funzionalita">Funzionalità</a></li>
+            <li><a href="#download">Download</a></li>
+            <li><a href="#faq">FAQ</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Progetto</h4>
+          <ul>
+            <li><a href="https://github.com/matthias-peterlini/Nexus-client">Codice sorgente</a></li>
+            <li><a href="https://github.com/matthias-peterlini/Nexus-client/releases">Note di rilascio</a></li>
+            <li><a href="https://github.com/matthias-peterlini/Nexus-client/issues">Segnala un problema</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="legal">
+        <span>© <span id="year">2026</span> Nexus Launcher</span>
+        <span>Non affiliato con Mojang Studios o Microsoft. Minecraft è un marchio di Mojang Synergies AB.</span>
+      </div>
     </div>
   </footer>
 
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
 
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
-    }, { threshold: 0.12 });
-    document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
-
-    // Il video (15 MB) si carica solo quando entra nello schermo e se l'utente non preferisce meno animazioni.
-    const video = document.querySelector("video[data-src]");
-    if (video && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      new IntersectionObserver((entries, obs) => {
-        if (!entries[0].isIntersecting) return;
-        obs.disconnect();
-        video.src = video.dataset.src;
-        video.play().catch(() => {});
-      }, { rootMargin: "200px" }).observe(video);
-    }
-
-    // Sistema del visitatore: evidenzia il suo pacchetto e lo usa per il pulsante principale.
+    // Sistema del visitatore: pulsante principale e riga evidenziata nella tabella.
     const ua = (navigator.userAgentData?.platform || navigator.platform || navigator.userAgent).toLowerCase();
     const os = /mac|iphone|ipad/.test(ua) ? "macos" : /linux|x11|cros/.test(ua) && !/android/.test(ua) ? "linux" : "windows";
-    const OS_LABEL = { windows: "Windows", macos: "macOS", linux: "Linux" };
-    const PRIMARY = { windows: "windows.exe", macos: "macos.dmg", linux: "linux.appimage" };
-    document.querySelector(`.plat[data-os="${os}"]`)?.classList.add("current");
+    const OS = {
+      windows: { label: "Windows", file: "nexus-launcher-setup.exe" },
+      macos: { label: "macOS", file: "nexus-launcher.dmg" },
+      linux: { label: "Linux", file: "nexus-launcher.AppImage" },
+    };
+    const RELEASES = "https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/";
     const heroBtn = document.getElementById("hero-dl");
-    heroBtn.href = document.querySelector(`[data-file="${PRIMARY[os]}"]`).href;
-    document.getElementById("hero-dl-label").textContent = `Scarica gratis per ${OS_LABEL[os]}`;
+    heroBtn.href = RELEASES + OS[os].file;
+    document.getElementById("hero-dl-label").textContent = "Scarica per " + OS[os].label;
+    document.querySelector(`.dl-row[data-file="${OS[os].file}"]`)?.classList.add("current");
 
+    // Copia del comando per Arch.
     document.querySelectorAll(".copy").forEach((btn) => {
       btn.addEventListener("click", async () => {
-        const icon = btn.querySelector(".icon");
         try {
           await navigator.clipboard.writeText(document.getElementById(btn.dataset.copy).textContent);
-          icon.textContent = "check";
+          btn.textContent = "Copiato";
         } catch {
-          icon.textContent = "error";
+          btn.textContent = "Errore";
         }
-        setTimeout(() => (icon.textContent = "content_copy"), 1800);
+        setTimeout(() => (btn.textContent = "Copia"), 1600);
       });
     });
 
-    // Versione e dimensioni dall'ultima GitHub Release (API pubblica, nessun token).
-    const FILES = {
-      "windows.exe": "nexus-launcher-setup.exe", "windows.msi": "nexus-launcher.msi",
-      "macos.dmg": "nexus-launcher.dmg",
-      "linux.appimage": "nexus-launcher.AppImage", "linux.deb": "nexus-launcher.deb", "linux.rpm": "nexus-launcher.rpm",
-      "linux.pacman": "nexus-launcher.pkg.tar.zst",
-    };
+    // Versione e dimensioni dall'ultima GitHub Release (API pubblica).
     const mb = (b) => (b / 1048576).toFixed(1) + " MB";
     fetch("https://api.github.com/repos/matthias-peterlini/Nexus-client/releases/latest", { headers: { Accept: "application/vnd.github+json" } })
       .then((r) => (r.ok ? r.json() : null))
@@ -492,19 +570,17 @@
         if (!rel) return;
         const version = String(rel.tag_name || "").replace(/^v/, "");
         const assets = Object.fromEntries((rel.assets || []).map((a) => [a.name, a]));
-        document.getElementById("ver-chip").textContent = "Versione " + version + " disponibile";
-        document.getElementById("meta").textContent = `v${version} · Windows · macOS · Linux · gratis`;
-        document.querySelectorAll("[data-file]").forEach((a) => {
-          const asset = assets[FILES[a.dataset.file]];
-          const d = a.querySelector(".d");
-          if (asset) d.textContent += ` · ${mb(asset.size)}`;
-          else { a.classList.add("unavailable"); a.setAttribute("aria-disabled", "true"); a.tabIndex = -1; d.textContent = "In arrivo"; }
+        const date = rel.published_at ? new Date(rel.published_at).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" }) : "";
+        document.querySelectorAll(".dl-row").forEach((row) => {
+          const a = assets[row.dataset.file];
+          if (a) row.querySelector(".size").textContent = mb(a.size);
+          else { row.classList.add("unavailable"); row.querySelector(".size").textContent = "n/d"; }
         });
-        if (!assets[FILES[PRIMARY[os]]]) {
-          heroBtn.href = "#download";
-          document.getElementById("hero-dl-label").textContent = "Scarica gratis";
-        }
-        if (rel.published_at) document.getElementById("dl-sub").textContent = `v${version}, pubblicata il ${new Date(rel.published_at).toLocaleDateString("it-IT")}. Gratis, open-source, nessuna pubblicità.`;
+        const primary = assets[OS[os].file];
+        document.getElementById("hero-meta").innerHTML =
+          `v${version}${primary ? " · " + OS[os].label + " · " + mb(primary.size) : ""} · <a href="#download">altre piattaforme</a>`;
+        document.getElementById("dl-sub").textContent = `Versione ${version}${date ? ", pubblicata il " + date : ""}. Gratuito per Windows, macOS e Linux.`;
+        if (!primary) { heroBtn.href = "#download"; document.getElementById("hero-dl-label").textContent = "Scarica Nexus Launcher"; }
       })
       .catch(() => {});
   </script>

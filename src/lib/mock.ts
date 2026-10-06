@@ -198,8 +198,20 @@ export async function mockInvoke<T>(cmd: string, args?: Record<string, unknown>)
       case "local_ai_prepare":
         return "http://127.0.0.1:11501";
       case "ollama_chat":
-      case "custom_api_chat":
+      case "custom_api_chat": {
+        // Risposta finta ma realistica: con una richiesta d'azione mostra anche la card eseguibile.
+        const msgs = (args?.messages as { role: string; content: string }[] | undefined) ?? [];
+        const last = msgs.filter((m) => m.role === "user").pop()?.content.toLowerCase() ?? "";
+        if (/istanza|crea|shader|survival/.test(last)) {
+          return (
+            "Ti preparo un'istanza **Fabric 1.21.1** ottimizzata, con Iris e uno shader leggero.\n\n```nexus-action\n" +
+            '{"type":"create_instance","name":"Survival Performance","mcVersion":"1.21.1","loader":"fabric","maxRamMb":6144,' +
+            '"mods":["iris","lithium","ferrite-core"],"shaders":["complementary-reimagined"],"resourcepacks":[],' +
+            '"summary":"Fabric 1.21.1 con Iris, Lithium, FerriteCore e Complementary Reimagined"}\n```'
+          );
+        }
         return "Ciao! Sono Nexus Copilot. Come posso aiutarti con le tue istanze e mod?";
+      }
       default:
         throw `Comando "${cmd}" disponibile solo nell'app desktop (npm run tauri dev)`;
     }

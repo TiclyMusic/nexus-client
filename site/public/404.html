@@ -3,25 +3,38 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pagina non trovata · Nexus</title>
+  <title>Pagina non trovata · Nexus Launcher</title>
   <meta name="robots" content="noindex" />
+  <meta name="color-scheme" content="light dark" />
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono&display=swap" rel="stylesheet" />
   <style>
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px; box-sizing: border-box;
-           background: #101510; color: #dfe4db; font-family: system-ui, sans-serif; text-align: center; }
-    img { width: 88px; margin-bottom: 20px; }
-    h1 { margin: 0 0 8px; font-size: 32px; }
-    p { color: #c0c9bb; margin: 0 0 24px; }
-    a { display: inline-block; padding: 14px 26px; border-radius: 999px; background: #8bd88e; color: #00390f; font-weight: 600; text-decoration: none; }
+    :root { --bg: #f7f7f4; --ink: #121412; --muted: #646b62; --line: #cfd1c8; --accent: #15803d; --accent-ink: #fff; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #0d0f0d; --ink: #eceee9; --muted: #949b91; --line: #343a33; --accent: #4ade80; --accent-ink: #052e13; } }
+    * { box-sizing: border-box; margin: 0; }
+    body { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--bg); color: var(--ink); font: 400 17px/1.6 "Geist", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    main { max-width: 440px; }
+    .code { font-family: "Geist Mono", ui-monospace, monospace; font-size: 14px; color: var(--muted); }
+    h1 { margin-top: 12px; font-size: 32px; line-height: 1.15; font-weight: 600; letter-spacing: -0.03em; }
+    p { margin-top: 12px; color: var(--muted); }
+    .actions { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px; }
+    a { display: inline-flex; align-items: center; height: 42px; padding: 0 16px; border-radius: 8px; font-size: 15px; font-weight: 500; text-decoration: none; }
+    .primary { background: var(--accent); color: var(--accent-ink); }
+    .secondary { border: 1px solid var(--line); color: var(--ink); }
   </style>
 </head>
 <body>
-  <div>
-    <img src="/logo.svg" alt="" />
-    <h1>Blocco non trovato</h1>
-    <p>Questa pagina non esiste (o un creeper l'ha fatta saltare).</p>
-    <a href="/">Torna alla home</a>
-  </div>
+  <main>
+    <p class="code">Errore 404</p>
+    <h1>Questa pagina non esiste.</h1>
+    <p>Il link potrebbe essere sbagliato o non più valido.</p>
+    <div class="actions">
+      <a class="primary" href="/">Torna alla home</a>
+      <a class="secondary" href="/#download">Vai ai download</a>
+    </div>
+  </main>
 </body>
 </html>
