@@ -36,6 +36,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://nexus-site.matthias-peterlini.workers.dev" />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="preload" as="image" href="/img/app-copilot-1440.webp" imagesrcset="/img/app-copilot-1440.webp 1440w, /img/app-copilot-2880.webp 2880w" imagesizes="(min-width: 1240px) 1200px, 100vw" />
 
@@ -102,6 +103,7 @@
   }
   </script>
 
+  <script>document.documentElement.classList.add("js");</script>
   <style>
     :root {
       --bg: #f7f7f4;
@@ -118,6 +120,7 @@
       --shot-shadow: 0 1px 2px rgba(17, 20, 17, 0.06), 0 24px 60px -28px rgba(17, 20, 17, 0.35);
       --radius: 10px;
       --mono: "Geist Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+      --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -169,7 +172,9 @@
     .gh svg { width: 18px; height: 18px; }
 
     /* Buttons */
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: 8px; font: inherit; font-size: 15px; font-weight: 500; text-decoration: none; border: 1px solid transparent; cursor: pointer; transition: background-color .15s, border-color .15s, color .15s; white-space: nowrap; }
+    .btn { translate: 0 0; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: 8px; font: inherit; font-size: 15px; font-weight: 500; text-decoration: none; border: 1px solid transparent; cursor: pointer; transition: background-color .15s, border-color .15s, color .15s, translate .15s var(--ease), box-shadow .15s; white-space: nowrap; }
+    .btn:hover { translate: 0 -1px; }
+    .btn-primary:hover { box-shadow: 0 6px 18px -8px color-mix(in srgb, var(--accent) 70%, transparent); }
     .btn svg { width: 18px; height: 18px; }
     .btn-primary { background: var(--accent); color: var(--accent-ink); }
     .btn-primary:hover { background: var(--accent-hover); }
@@ -258,6 +263,31 @@
     .foot a:hover { color: var(--ink); }
     .legal { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 13px; }
 
+    /* Video */
+    .video { position: relative; aspect-ratio: 16 / 9; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); box-shadow: var(--shot-shadow); background: #0c110d; }
+    .video video { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .video-toggle { position: absolute; right: 16px; bottom: 16px; display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border: 0; border-radius: 999px; background: rgba(10, 12, 10, 0.6); color: #fff; font: inherit; font-size: 13px; cursor: pointer; backdrop-filter: blur(8px); transition: background-color .15s; }
+    .video-toggle:hover { background: rgba(10, 12, 10, 0.8); }
+    .video-toggle svg { width: 14px; height: 14px; }
+
+    /* Animazioni: entrata morbida quando un elemento arriva nello schermo */
+    .js .anim { opacity: 0; translate: 0 18px; transition: opacity .8s var(--ease), translate .8s var(--ease), scale 1s var(--ease); transition-delay: var(--d, 0ms); }
+    .js .anim.in { opacity: 1; translate: 0 0; }
+    .js .anim.done { transition-delay: 0ms; }
+    .js .hero .shot.anim { translate: 0 40px; scale: 0.985; }
+    .js .hero .shot.anim.in { translate: 0 0; scale: 1; }
+    .feature .shot.in:hover { translate: 0 -4px; }
+    .feature .shot { transition: opacity .8s var(--ease), translate .5s var(--ease), box-shadow .5s var(--ease); }
+    .dl-row { transition: background-color .15s; }
+    .dl-row:hover { background: color-mix(in srgb, var(--ink) 3%, transparent); }
+    .dl-row.current:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+    .faq summary { transition: color .15s; }
+    .faq summary:hover { color: var(--accent); }
+    @media (prefers-reduced-motion: reduce) {
+      .js .anim, .js .hero .shot.anim { opacity: 1; translate: none; scale: none; transition: none; }
+      .btn:hover, .feature .shot.in:hover { translate: none; }
+    }
+
     @media (max-width: 900px) {
       nav.main, .gh span { display: none; }
       .feature, .faq-layout { grid-template-columns: 1fr; gap: 32px; }
@@ -307,18 +337,18 @@
   <main id="main">
     <div class="hero">
       <div class="wrap">
-        <h1>Il launcher open&#8209;source per Minecraft: Java Edition.</h1>
-        <p class="lede">Istanze, mod e amici in un'unica app. Nexus scarica il Java giusto, risolve le dipendenze delle mod e prepara le istanze per te. Gratuito e senza pubblicità.</p>
-        <div class="actions">
+        <h1 class="anim">Il launcher open&#8209;source per Minecraft: Java Edition.</h1>
+        <p class="lede anim" style="--d: 90ms">Istanze, mod e amici in un'unica app. Nexus scarica il Java giusto, risolve le dipendenze delle mod e prepara le istanze per te. Gratuito e senza pubblicità.</p>
+        <div class="actions anim" style="--d: 180ms">
           <a class="btn btn-primary" id="hero-dl" href="#download">
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M10 3v10m0 0l-4-4m4 4l4-4M4 16h12" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span id="hero-dl-label">Scarica Nexus Launcher</span>
           </a>
           <a class="btn btn-secondary" href="#download">Tutte le piattaforme</a>
         </div>
-        <p class="meta mono" id="hero-meta">Windows · macOS · Linux</p>
+        <p class="meta mono anim" style="--d: 240ms" id="hero-meta">Windows · macOS · Linux</p>
 
-        <div class="shot">
+        <div class="shot anim" style="--d: 320ms">
           <img src="/img/app-copilot-1440.webp" srcset="/img/app-copilot-1440.webp 1440w, /img/app-copilot-2880.webp 2880w" sizes="(min-width: 1240px) 1200px, 100vw" width="1440" height="900" alt="Schermata principale di Nexus Launcher: l'istanza Survival Performance e il Modding Copilot che propone una nuova istanza Fabric con Iris e shader" fetchpriority="high" />
         </div>
       </div>
@@ -339,10 +369,27 @@
       </div>
     </div>
 
+    <section id="video" aria-labelledby="video-title" style="padding-bottom: 0">
+      <div class="wrap">
+        <div class="section-head anim">
+          <p class="eyebrow">In azione</p>
+          <h2 id="video-title">Nexus in 36 secondi.</h2>
+          <p>Dalla home al Copilot, dalle mod agli amici: un giro veloce del launcher.</p>
+        </div>
+        <div class="video anim" style="--d: 100ms">
+          <video id="promo" muted loop playsinline preload="none" width="1920" height="1080" poster="/img/video-poster-1280.webp" data-src="https://nexus-site.matthias-peterlini.workers.dev/media/nexus-promo.mp4" aria-label="Video di presentazione di Nexus Launcher (36 secondi, senza audio)"></video>
+          <button type="button" class="video-toggle" id="video-toggle" aria-label="Riproduci il video">
+            <svg viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 1.5v11l9-5.5z"/></svg>
+            <span>Riproduci</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
     <section id="funzionalita" aria-label="Funzionalità" style="padding-top: 96px">
       <div class="wrap">
         <div class="feature">
-          <div class="text">
+          <div class="text anim">
             <p class="eyebrow">Istanze</p>
             <h2>Ogni installazione è separata dalle altre.</h2>
             <p>Ogni istanza ha la sua versione di Minecraft, il suo mod loader e le sue mod. Puoi tenere un modpack tecnico su Forge e una survival leggera su Fabric senza che si disturbino.</p>
@@ -352,13 +399,13 @@
               <li>Clona, ripara ed elimina un'istanza in un clic</li>
             </ul>
           </div>
-          <div class="shot">
+          <div class="shot anim" style="--d: 120ms">
             <img src="/img/app-instance-1200.webp" srcset="/img/app-instance-1200.webp 1200w, /img/app-instance-2400.webp 2400w" sizes="(min-width: 900px) 680px, 100vw" width="1200" height="442" loading="lazy" alt="Pagina di un'istanza con l'elenco delle mod installate: Sodium, Lithium, Fabric API e Iris Shaders" />
           </div>
         </div>
 
         <div class="feature flip">
-          <div class="text">
+          <div class="text anim">
             <p class="eyebrow">Modding Copilot</p>
             <h2>Descrivi cosa vuoi giocare. Il Copilot prepara l'istanza.</h2>
             <p>Chiedi, per esempio, una survival leggera con shader: il Copilot propone versione, mod loader, mod e shader compatibili. Controlli la proposta e la esegui con un clic.</p>
@@ -368,13 +415,13 @@
               <li>Legge il log di un crash e propone come risolverlo</li>
             </ul>
           </div>
-          <div class="shot narrow">
+          <div class="shot narrow anim" style="--d: 120ms">
             <img src="/img/copilot-panel-600.webp" srcset="/img/copilot-panel-600.webp 600w, /img/copilot-panel-1000.webp 1000w" sizes="440px" width="600" height="685" loading="lazy" alt="Il Modding Copilot propone un'istanza Fabric 1.21.1 con Iris, Lithium, FerriteCore e lo shader Complementary Reimagined" />
           </div>
         </div>
 
         <div class="feature">
-          <div class="text">
+          <div class="text anim">
             <p class="eyebrow">Amici</p>
             <h2>Vedi chi è online ed entra nel suo mondo.</h2>
             <p>Aggiungi gli amici con il loro nome Minecraft e guarda a cosa stanno giocando. Se qualcuno ospita un mondo, ti basta un clic per ottenere l'indirizzo.</p>
@@ -384,7 +431,7 @@
               <li>Invita su WhatsApp chi non usa ancora Nexus</li>
             </ul>
           </div>
-          <div class="shot">
+          <div class="shot anim" style="--d: 120ms">
             <img src="/img/app-friends-1200.webp" srcset="/img/app-friends-1200.webp 1200w, /img/app-friends-2400.webp 2400w" sizes="(min-width: 900px) 680px, 100vw" width="1200" height="717" loading="lazy" alt="Sezione Amici: un amico ospita un mondo con il pulsante Entra, altri sono online o in gioco" />
           </div>
         </div>
@@ -393,31 +440,31 @@
 
     <section aria-labelledby="dettagli-title" style="padding-top: 0">
       <div class="wrap">
-        <div class="section-head">
+        <div class="section-head anim">
           <p class="eyebrow">Dettagli</p>
           <h2 id="dettagli-title">Le cose noiose le fa il launcher.</h2>
         </div>
         <div class="grid">
-          <div><h3>Login Microsoft ufficiale</h3><p>Accesso con codice sulla pagina di Microsoft. I token restano sul tuo computer, cifrati con AES-256-GCM.</p></div>
-          <div><h3>Java automatico</h3><p>Scarica il runtime Java ufficiale richiesto da ogni versione di Minecraft. Niente da installare a mano.</p></div>
-          <div><h3>Download verificati</h3><p>Librerie, asset e client scaricati in parallelo e controllati con SHA1.</p></div>
-          <div><h3>Modrinth integrato</h3><p>Mod, shader, resource pack e modpack .mrpack con dipendenze risolte in automatico.</p></div>
-          <div><h3>Console integrata</h3><p>Log di download e di gioco in tempo reale, utili quando qualcosa non parte.</p></div>
-          <div><h3>Tema personalizzabile</h3><p>Interfaccia Material 3 con il colore che preferisci.</p></div>
+          <div class="anim" style="--d: 0ms"><h3>Login Microsoft ufficiale</h3><p>Accesso con codice sulla pagina di Microsoft. I token restano sul tuo computer, cifrati con AES-256-GCM.</p></div>
+          <div class="anim" style="--d: 70ms"><h3>Java automatico</h3><p>Scarica il runtime Java ufficiale richiesto da ogni versione di Minecraft. Niente da installare a mano.</p></div>
+          <div class="anim" style="--d: 140ms"><h3>Download verificati</h3><p>Librerie, asset e client scaricati in parallelo e controllati con SHA1.</p></div>
+          <div class="anim" style="--d: 210ms"><h3>Modrinth integrato</h3><p>Mod, shader, resource pack e modpack .mrpack con dipendenze risolte in automatico.</p></div>
+          <div class="anim" style="--d: 280ms"><h3>Console integrata</h3><p>Log di download e di gioco in tempo reale, utili quando qualcosa non parte.</p></div>
+          <div class="anim" style="--d: 350ms"><h3>Tema personalizzabile</h3><p>Interfaccia Material 3 con il colore che preferisci.</p></div>
         </div>
       </div>
     </section>
 
     <section id="download" aria-labelledby="download-title">
       <div class="wrap">
-        <div class="section-head">
+        <div class="section-head anim">
           <p class="eyebrow">Download</p>
           <h2 id="download-title">Scarica Nexus Launcher</h2>
           <p id="dl-sub">Gratuito per Windows, macOS e Linux.</p>
         </div>
 
         <div class="downloads">
-          <div class="dl-group" data-os="windows">
+          <div class="dl-group anim" style="--d: 0ms" data-os="windows">
             <div class="dl-os"><h3>Windows</h3><p>Windows 10 e 11, 64 bit</p></div>
             <div class="dl-rows">
               <div class="dl-row" data-file="nexus-launcher-setup.exe">
@@ -434,7 +481,7 @@
             </div>
           </div>
 
-          <div class="dl-group" data-os="macos">
+          <div class="dl-group anim" style="--d: 90ms" data-os="macos">
             <div class="dl-os"><h3>macOS</h3><p>10.15 o successivo · Intel e Apple Silicon</p></div>
             <div class="dl-rows">
               <div class="dl-row" data-file="nexus-launcher.dmg">
@@ -446,7 +493,7 @@
             </div>
           </div>
 
-          <div class="dl-group" data-os="linux">
+          <div class="dl-group anim" style="--d: 180ms" data-os="linux">
             <div class="dl-os"><h3>Linux</h3><p>x86_64</p></div>
             <div class="dl-rows">
               <div class="dl-row" data-file="nexus-launcher.AppImage">
@@ -483,11 +530,11 @@
 
     <section id="faq" aria-labelledby="faq-title">
       <div class="wrap faq-layout">
-        <div>
+        <div class="anim">
           <p class="eyebrow">FAQ</p>
           <h2 id="faq-title" style="margin-top: 12px">Domande frequenti</h2>
         </div>
-        <div class="faq">
+        <div class="faq anim" style="--d: 100ms">
           <details><summary>Nexus Launcher è gratis?</summary><p>Sì. È gratuito e open-source, senza pubblicità né abbonamenti. Serve una copia originale di Minecraft: Java Edition.</p></details>
           <details><summary>Come si accede con l'account Microsoft?</summary><p>Nexus mostra un codice che inserisci nella pagina di accesso ufficiale di Microsoft. La password non passa mai dal launcher; i token restano sul tuo computer, cifrati con AES-256-GCM e con la chiave nel portachiavi di sistema.</p></details>
           <details><summary>Quali mod loader sono supportati?</summary><p>Vanilla, Fabric, Quilt, Forge e NeoForge, sia per le release sia per gli snapshot. Ogni istanza è isolata: versioni e mod diverse non entrano in conflitto.</p></details>
@@ -534,6 +581,43 @@
 
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Animazioni di entrata
+    const reveal = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        e.target.classList.add("in");
+        e.target.addEventListener("transitionend", () => e.target.classList.add("done"), { once: true });
+        reveal.unobserve(e.target);
+      }
+    }, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
+    document.querySelectorAll(".anim").forEach((el) => reveal.observe(el));
+
+    // Video: si carica solo quando serve; parte da solo (è muto) se l'utente non preferisce meno movimento.
+    const video = document.getElementById("promo");
+    const toggle = document.getElementById("video-toggle");
+    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let userPaused = reduceMotion;
+    const ICON_PLAY = '<svg viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 1.5v11l9-5.5z"/></svg>';
+    const ICON_PAUSE = '<svg viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M3 1.5h3v11H3zM8 1.5h3v11H8z"/></svg>';
+    const syncToggle = () => {
+      const playing = !video.paused;
+      toggle.innerHTML = (playing ? ICON_PAUSE : ICON_PLAY) + `<span>${playing ? "Pausa" : "Riproduci"}</span>`;
+      toggle.setAttribute("aria-label", playing ? "Metti in pausa il video" : "Riproduci il video");
+    };
+    const play = () => {
+      if (!video.src) video.src = video.dataset.src;
+      video.play().catch(() => {});
+    };
+    video.addEventListener("play", syncToggle);
+    video.addEventListener("pause", syncToggle);
+    toggle.addEventListener("click", () => {
+      if (video.paused) { userPaused = false; play(); } else { userPaused = true; video.pause(); }
+    });
+    new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !userPaused) play();
+      else if (!e.isIntersecting && !video.paused) video.pause();
+    }, { threshold: 0.35 }).observe(video);
 
     // Sistema del visitatore: pulsante principale e riga evidenziata nella tabella.
     const ua = (navigator.userAgentData?.platform || navigator.platform || navigator.userAgent).toLowerCase();
