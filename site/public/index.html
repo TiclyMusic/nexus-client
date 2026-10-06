@@ -40,6 +40,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://nexus-site.matthias-peterlini.workers.dev" />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/ttf" href="/fonts/minecrafter/Minecrafter.Reg.ttf" crossorigin />
   <link rel="preload" as="image" href="/img/app-copilot-1440.webp" imagesrcset="/img/app-copilot-1440.webp 1440w, /img/app-copilot-2880.webp 2880w" imagesizes="(min-width: 1240px) 1200px, 100vw" />
 
   <script type="application/ld+json">
@@ -116,6 +117,13 @@
 
   <script>document.documentElement.classList.add("js");</script>
   <style>
+    /* MineCrafter di MadPixel (CC non commerciale, file e licenza in /fonts/minecrafter/):
+       solo per il nome nel logo e per il titolo grande dell'hero. */
+    @font-face {
+      font-family: "Minecrafter";
+      src: url("/fonts/minecrafter/Minecrafter.Reg.ttf") format("truetype");
+      font-display: swap;
+    }
     :root {
       --bg: #f7f7f4;
       --surface: #ffffff;
@@ -173,7 +181,7 @@
     /* Header */
     header.site { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: saturate(1.4) blur(10px); border-bottom: 1px solid var(--line); }
     header.site .wrap { display: flex; align-items: center; gap: 32px; height: 60px; }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 16px; text-decoration: none; letter-spacing: -0.01em; }
+    .brand { display: flex; align-items: center; gap: 10px; font-family: "Minecrafter", "Geist", system-ui, sans-serif; font-weight: 400; font-size: 17px; text-decoration: none; letter-spacing: 0.02em; }
     .brand img { width: 26px; height: 26px; }
     nav.main { display: flex; gap: 24px; margin-left: 8px; }
     nav.main a { font-size: 14px; color: var(--muted); text-decoration: none; }
@@ -196,7 +204,7 @@
 
     /* Hero */
     .hero { padding: 88px 0 56px; }
-    .hero h1 { font-size: clamp(38px, 5.4vw, 64px); line-height: 1.05; font-weight: 600; letter-spacing: -0.035em; max-width: 15ch; }
+    .hero h1 { font-family: "Minecrafter", "Geist", system-ui, sans-serif; font-size: clamp(30px, 4.4vw, 54px); line-height: 1.18; font-weight: 400; letter-spacing: 0.01em; max-width: 20ch; }
     .hero .lede { margin-top: 20px; font-size: clamp(17px, 1.6vw, 20px); color: var(--ink-2); max-width: 56ch; }
     .hero .actions { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 12px; }
     .hero .meta { margin-top: 16px; font-size: 13px; color: var(--muted); }
@@ -602,7 +610,7 @@
       </div>
       <div class="legal">
         <span>© <span id="year">2026</span> <a href="https://matthiaspeterlini.tech/">Matthias Peterlini</a> · Nexus Launcher</span>
-        <span>Non affiliato con Mojang Studios o Microsoft. Minecraft è un marchio di Mojang Synergies AB.</span>
+        <span>Non affiliato con Mojang Studios o Microsoft. Minecraft è un marchio di Mojang Synergies AB. Font del logo: <a href="/fonts/minecrafter/License.txt">MineCrafter di MadPixel</a>.</span>
       </div>
     </div>
   </footer>
