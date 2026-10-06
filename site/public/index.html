@@ -67,7 +67,7 @@
         "name": "Nexus Launcher",
         "url": "https://nexusmc.online/",
         "logo": "https://nexusmc.online/img/icon-512.png",
-        "sameAs": ["https://github.com/matthias-peterlini/Nexus-client"],
+        "sameAs": ["https://github.com/TiclyMusic/nexus-client"],
         "founder": { "@id": "https://nexusmc.online/#author" }
       },
       {
@@ -81,7 +81,7 @@
         "operatingSystem": "Windows 10, Windows 11, macOS 10.15+, Linux",
         "inLanguage": "it-IT",
         "isAccessibleForFree": true,
-        "downloadUrl": "https://github.com/matthias-peterlini/Nexus-client/releases/latest",
+        "downloadUrl": "https://github.com/TiclyMusic/nexus-client/releases/latest",
         "image": "https://nexusmc.online/img/og.jpg",
         "screenshot": "https://nexusmc.online/img/app-copilot-1440.webp",
         "featureList": [
@@ -201,8 +201,14 @@
     .hero .actions { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 12px; }
     .hero .meta { margin-top: 16px; font-size: 13px; color: var(--muted); }
     .hero .meta a { color: var(--muted); }
+    .live { display: inline-flex; align-items: center; gap: 10px; margin-top: 18px; padding: 7px 16px 7px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-size: 14px; color: var(--ink-2); }
+    .live[hidden] { display: none; }
+    .live strong { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .live .dot { position: relative; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+    .live .dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--accent); animation: live-pulse 2s var(--ease) infinite; }
+    @keyframes live-pulse { 0% { opacity: 0.6; scale: 1; } 80%, 100% { opacity: 0; scale: 2.8; } }
+    .hero .shot { margin-top: 48px; }
     .shot { border-radius: var(--radius); border: 1px solid var(--line); box-shadow: var(--shot-shadow); background: #121512; overflow: hidden; }
-    .hero .shot { margin-top: 56px; }
 
     /* Loader */
     .loaders { border-block: 1px solid var(--line); }
@@ -301,6 +307,7 @@
       html { scroll-behavior: auto; }
       .js .anim, .js .shot.anim, .js .video.anim { opacity: 1; translate: none; scale: none; filter: none; transition: none; }
       .faq summary::after { transition: none; }
+      .live .dot::after { animation: none; }
       .btn:hover, .js .feature .shot.anim.done:hover { translate: none; }
     }
 
@@ -341,7 +348,7 @@
         <a href="#faq">FAQ</a>
       </nav>
       <div class="header-cta">
-        <a class="gh" href="https://github.com/matthias-peterlini/Nexus-client">
+        <a class="gh" href="https://github.com/TiclyMusic/nexus-client">
           <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           <span>GitHub</span>
         </a>
@@ -363,6 +370,10 @@
           <a class="btn btn-secondary" href="#download">Tutte le piattaforme</a>
         </div>
         <p class="meta mono anim" style="--d: 240ms" id="hero-meta">Windows · macOS · Linux</p>
+        <p class="live anim" style="--d: 280ms" id="live" hidden aria-live="polite">
+          <span class="dot" aria-hidden="true"></span>
+          <span><strong id="live-reg">0</strong> <span id="live-reg-label">giocatori registrati</span> · <strong id="live-on">0</strong> online ora</span>
+        </p>
 
         <div class="shot anim" style="--d: 320ms">
           <img src="/img/app-copilot-1440.webp" srcset="/img/app-copilot-1440.webp 1440w, /img/app-copilot-2880.webp 2880w" sizes="(min-width: 1240px) 1200px, 100vw" width="1440" height="900" alt="Schermata principale di Nexus Launcher: l'istanza Survival Performance e il Modding Copilot che propone una nuova istanza Fabric con Iris e shader" fetchpriority="high" />
@@ -486,12 +497,12 @@
               <div class="dl-row" data-file="nexus-launcher-setup.exe">
                 <span class="name">Installer<small>nexus-launcher-setup.exe · consigliato</small></span>
                 <span class="size">—</span>
-                <a class="btn btn-secondary btn-sm" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher-setup.exe">Scarica</a>
+                <a class="btn btn-secondary btn-sm" href="https://github.com/TiclyMusic/nexus-client/releases/latest/download/nexus-launcher-setup.exe">Scarica</a>
               </div>
               <div class="dl-row" data-file="nexus-launcher.msi">
                 <span class="name">Pacchetto MSI<small>nexus-launcher.msi · per installazioni gestite</small></span>
                 <span class="size">—</span>
-                <a class="btn btn-secondary btn-sm" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.msi">Scarica</a>
+                <a class="btn btn-secondary btn-sm" href="https://github.com/TiclyMusic/nexus-client/releases/latest/download/nexus-launcher.msi">Scarica</a>
               </div>
               <p class="note">Se compare "Windows ha protetto il PC", scegli Ulteriori informazioni → Esegui comunque.</p>
             </div>
@@ -503,7 +514,7 @@
               <div class="dl-row" data-file="nexus-launcher.dmg">
                 <span class="name">Immagine disco<small>nexus-launcher.dmg · universale</small></span>
                 <span class="size">—</span>
-                <a class="btn btn-secondary btn-sm" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.dmg">Scarica</a>
+                <a class="btn btn-secondary btn-sm" href="https://github.com/TiclyMusic/nexus-client/releases/latest/download/nexus-launcher.dmg">Scarica</a>
               </div>
               <p class="note">Trascina Nexus in Applicazioni. Se macOS lo blocca al primo avvio: Impostazioni di Sistema → Privacy e sicurezza → Apri comunque.</p>
             </div>
@@ -515,32 +526,32 @@
               <div class="dl-row" data-file="nexus-launcher.AppImage">
                 <span class="name">AppImage<small>Qualsiasi distribuzione · rendilo eseguibile con chmod +x</small></span>
                 <span class="size">—</span>
-                <a class="btn btn-secondary btn-sm" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.AppImage">Scarica</a>
+                <a class="btn btn-secondary btn-sm" href="https://github.com/TiclyMusic/nexus-client/releases/latest/download/nexus-launcher.AppImage">Scarica</a>
               </div>
               <div class="dl-row" data-file="nexus-launcher.deb">
                 <span class="name">.deb<small>Debian, Ubuntu, Linux Mint</small></span>
                 <span class="size">—</span>
-                <a class="btn btn-secondary btn-sm" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.deb">Scarica</a>
+                <a class="btn btn-secondary btn-sm" href="https://github.com/TiclyMusic/nexus-client/releases/latest/download/nexus-launcher.deb">Scarica</a>
               </div>
               <div class="dl-row" data-file="nexus-launcher.rpm">
                 <span class="name">.rpm<small>Fedora, openSUSE</small></span>
                 <span class="size">—</span>
-                <a class="btn btn-secondary btn-sm" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.rpm">Scarica</a>
+                <a class="btn btn-secondary btn-sm" href="https://github.com/TiclyMusic/nexus-client/releases/latest/download/nexus-launcher.rpm">Scarica</a>
               </div>
               <div class="dl-row" data-file="nexus-launcher.pkg.tar.zst">
                 <span class="name">Arch Linux<small>Arch, Manjaro, EndeavourOS · pacchetto pacman</small></span>
                 <span class="size">—</span>
-                <a class="btn btn-secondary btn-sm" href="https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.pkg.tar.zst">Scarica</a>
+                <a class="btn btn-secondary btn-sm" href="https://github.com/TiclyMusic/nexus-client/releases/latest/download/nexus-launcher.pkg.tar.zst">Scarica</a>
               </div>
               <div class="cmd">
-                <code id="arch-cmd">curl -LO https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/nexus-launcher.pkg.tar.zst &amp;&amp; sudo pacman -U nexus-launcher.pkg.tar.zst</code>
+                <code id="arch-cmd">curl -LO https://github.com/TiclyMusic/nexus-client/releases/latest/download/nexus-launcher.pkg.tar.zst &amp;&amp; sudo pacman -U nexus-launcher.pkg.tar.zst</code>
                 <button type="button" class="copy" data-copy="arch-cmd">Copia</button>
               </div>
             </div>
           </div>
         </div>
 
-        <p class="dl-foot">Tutte le versioni e le note di rilascio sono su <a href="https://github.com/matthias-peterlini/Nexus-client/releases">GitHub Releases</a>.</p>
+        <p class="dl-foot">Tutte le versioni e le note di rilascio sono su <a href="https://github.com/TiclyMusic/nexus-client/releases">GitHub Releases</a>.</p>
       </div>
     </section>
 
@@ -582,9 +593,9 @@
         <div>
           <h4>Progetto</h4>
           <ul>
-            <li><a href="https://github.com/matthias-peterlini/Nexus-client">Codice sorgente</a></li>
-            <li><a href="https://github.com/matthias-peterlini/Nexus-client/releases">Note di rilascio</a></li>
-            <li><a href="https://github.com/matthias-peterlini/Nexus-client/issues">Segnala un problema</a></li>
+            <li><a href="https://github.com/TiclyMusic/nexus-client">Codice sorgente</a></li>
+            <li><a href="https://github.com/TiclyMusic/nexus-client/releases">Note di rilascio</a></li>
+            <li><a href="https://github.com/TiclyMusic/nexus-client/issues">Segnala un problema</a></li>
             <li><a href="https://matthiaspeterlini.tech/">L'autore</a></li>
           </ul>
         </div>
@@ -665,7 +676,7 @@
       macos: { label: "macOS", file: "nexus-launcher.dmg" },
       linux: { label: "Linux", file: "nexus-launcher.AppImage" },
     };
-    const RELEASES = "https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/";
+    const RELEASES = "https://github.com/TiclyMusic/nexus-client/releases/latest/download/";
     const heroBtn = document.getElementById("hero-dl");
     heroBtn.href = RELEASES + OS[os].file;
     document.getElementById("hero-dl-label").textContent = "Scarica per " + OS[os].label;
@@ -684,9 +695,43 @@
       });
     });
 
+    // Giocatori registrati e online, in diretta dal server amici (solo totali).
+    (() => {
+      const live = document.getElementById("live");
+      const reg = document.getElementById("live-reg");
+      const on = document.getElementById("live-on");
+      const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const fmt = (n) => n.toLocaleString("it-IT");
+      const countTo = (el, to) => {
+        const from = Number(el.dataset.v || 0);
+        el.dataset.v = to;
+        if (still || from === to) { el.textContent = fmt(to); return; }
+        const t0 = performance.now();
+        const step = (t) => {
+          const k = Math.min(1, (t - t0) / 700);
+          el.textContent = fmt(Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3))));
+          if (k < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      };
+      const load = () =>
+        fetch("https://nexus-social.matthias-peterlini.workers.dev/stats", { cache: "no-store" })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((st) => {
+            if (!st || typeof st.registered !== "number") return;
+            live.hidden = false;
+            document.getElementById("live-reg-label").textContent = st.registered === 1 ? "giocatore registrato" : "giocatori registrati";
+            countTo(reg, st.registered);
+            countTo(on, st.online || 0);
+          })
+          .catch(() => {});
+      load();
+      setInterval(() => { if (!document.hidden) load(); }, 30000);
+    })();
+
     // Versione e dimensioni dall'ultima GitHub Release (API pubblica).
     const mb = (b) => (b / 1048576).toFixed(1) + " MB";
-    fetch("https://api.github.com/repos/matthias-peterlini/Nexus-client/releases/latest", { headers: { Accept: "application/vnd.github+json" } })
+    fetch("https://api.github.com/repos/TiclyMusic/nexus-client/releases/latest", { headers: { Accept: "application/vnd.github+json" } })
       .then((r) => (r.ok ? r.json() : null))
       .then((rel) => {
         if (!rel) return;

@@ -129,7 +129,7 @@ const NAV: { page: Page; icon: string; label: string }[] = [
 ];
 
 export function NavRail({ onNewInstance }: { onNewInstance: () => void }) {
-  const { page, navigate, aiOpen, toggleAi, consoleOpen, toggleConsole, accounts } = useApp();
+  const { page, navigate, aiOpen, toggleAi, consoleOpen, toggleConsole, accounts, unreadTotal } = useApp();
   const active = accounts.find((a) => a.active) ?? accounts[0];
   const current = page === "instance" ? "home" : page;
   return (
@@ -154,11 +154,16 @@ export function NavRail({ onNewInstance }: { onNewInstance: () => void }) {
           >
             <span
               className={cn(
-                "state-layer flex h-8 items-center justify-center rounded-full transition-all duration-300 ease-spring",
+                "state-layer relative flex h-8 items-center justify-center rounded-full transition-all duration-300 ease-spring",
                 selected ? "w-14 bg-secondary-container text-on-secondary-container" : "w-8 text-on-surface-variant group-hover:w-14",
               )}
             >
               <Icon name={item.icon} filled={selected} />
+              {item.page === "friends" && unreadTotal > 0 && (
+                <span className="absolute -top-0.5 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold text-on-error">
+                  {unreadTotal > 9 ? "9+" : unreadTotal}
+                </span>
+              )}
             </span>
             <span className={cn("text-xs", selected ? "font-bold text-on-surface" : "font-medium text-on-surface-variant")}>
               {item.label}

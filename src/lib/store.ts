@@ -36,6 +36,9 @@ interface AppStore {
   refreshAccounts: () => Promise<void>;
   friends: FriendsData;
   refreshFriends: () => Promise<void>;
+  /** Messaggi di chat non letti in totale (badge su "Amici"). */
+  unreadTotal: number;
+  setUnreadTotal: (n: number) => void;
   tunnel: TunnelInfo | null;
   setTunnel: (t: TunnelInfo | null) => void;
 
@@ -110,9 +113,20 @@ export const useApp = create<AppStore>((set, get) => ({
   friends: { configured: false, friends: [], incoming: [], outgoing: [] },
   tunnel: null,
   setTunnel: (tunnel) => set({ tunnel }),
+  unreadTotal: 0,
+  setUnreadTotal: (n) => {
+    const prev = get().unreadTotal;
+    set({ unreadTotal: n });
+    // nuovi messaggi: aggiorna la lista amici (badge per amico) e avvisa se non sei già lì
+    if (n > prev) {
+      get().refreshFriends();
+      if (get().page !== "friends") get().snack(n === 1 ? "Hai un nuovo messaggio" : `Hai ${n} messaggi non letti`, "info", { label: "Apri", run: () => get().navigate("friends") });
+    }
+  },
   refreshFriends: async () => {
     try {
-      set({ friends: await api.getFriends() });
+      const friends = await api.getFriends();
+      set({ friends, unreadTotal: friends.friends.reduce((sum, f) => sum + (f.unread ?? 0), 0) });
     } catch (e) {
       // errori del server amici non devono spammare snackbar: li mostra la pagina
       console.warn("refreshFriends", errorMessage(e));

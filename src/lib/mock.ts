@@ -113,6 +113,16 @@ const search: SearchResponse = {
   ],
 };
 
+// Chat finta per lo sviluppo dell'interfaccia nel browser.
+let mockChatId = 3;
+const mockChats: Record<string, { id: number; from: string; to: string; text: string; created: number }[]> = {
+  ec561538f3fd461daff5086b22154bce: [
+    { id: 1, from: "ec561538f3fd461daff5086b22154bce", to: accounts[0].uuid, text: "Ho aperto il mondo survival, entri?", created: Date.now() - 300_000 },
+    { id: 2, from: accounts[0].uuid, to: "ec561538f3fd461daff5086b22154bce", text: "Arrivo tra 5 minuti!", created: Date.now() - 240_000 },
+    { id: 3, from: "ec561538f3fd461daff5086b22154bce", to: accounts[0].uuid, text: "Ok, porta i diamanti 💎", created: Date.now() - 60_000 },
+  ],
+};
+
 export async function mockInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   await new Promise((r) => setTimeout(r, 120));
   const out = ((): unknown => {
@@ -154,7 +164,7 @@ export async function mockInvoke<T>(cmd: string, args?: Record<string, unknown>)
         return {
           configured: true,
           friends: [
-            { uuid: "ec561538f3fd461daff5086b22154bce", name: "Alex", favorite: true, online: true, status: "hosting", detail: "Sta hostando Survival Realm", joinAddress: "bore.pub:38421" },
+            { uuid: "ec561538f3fd461daff5086b22154bce", name: "Alex", favorite: true, online: true, status: "hosting", detail: "Sta hostando Survival Realm", joinAddress: "bore.pub:38421", unread: 1 },
             { uuid: "8667ba71b85a4004af54457a9734eed7", name: "Steve", favorite: false, online: true, status: "playing", detail: "Create & Tech · 1.20.1", joinAddress: "" },
             { uuid: "61699b2ed3274a019f1e0ea8c3f06bc6", name: "Herobrine", favorite: false, online: false, status: "offline", detail: "", joinAddress: "" },
           ],
@@ -179,6 +189,16 @@ export async function mockInvoke<T>(cmd: string, args?: Record<string, unknown>)
       case "remove_friend":
       case "set_friend_favorite":
         return null;
+      case "get_chat_messages": {
+        const list = mockChats[args?.uuid as string] ?? [];
+        return list.filter((m) => m.id > ((args?.after as number) ?? 0));
+      }
+      case "send_chat_message": {
+        const uuid = args?.uuid as string;
+        const msg = { id: ++mockChatId, from: accounts[0].uuid, to: uuid, text: String(args?.text ?? ""), created: Date.now() };
+        (mockChats[uuid] ??= []).push(msg);
+        return msg;
+      }
       case "start_tunnel":
         return { active: true, localPort: args?.localPort ?? 25565, remotePort: 38421, publicAddress: "bore.pub:38421", serverHost: "bore.pub" };
       case "stop_tunnel":

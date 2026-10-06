@@ -6,7 +6,7 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use tauri::State;
+use tauri::{AppHandle, Emitter, State};
 
 use crate::{
     auth,
@@ -25,6 +25,20 @@ pub struct FriendPresence {
     pub status: String,
     pub detail: String,
     pub join_address: String,
+    /// Messaggi di chat non ancora letti da questo amico.
+    #[serde(default)]
+    pub unread: u32,
+}
+
+/// Messaggio della chat tra amici. `created` è in millisecondi (Unix).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DirectMessage {
+    pub id: i64,
+    pub from: String,
+    pub to: String,
+    pub text: String,
+    pub created: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -176,18 +190,24 @@ pub async fn current_presence(state: &AppState) -> (String, String, String) {
 }
 
 /// Invia un heartbeat di presenza. Silenzioso: gli errori non devono disturbare l'utente.
-pub async fn heartbeat(state: &AppState) {
+pub async fn heartbeat(app: &AppHandle, state: &AppState) {
     if base_url(&state.settings.read().await.social_url).is_err() {
         return;
     }
     let (status, detail, join_address) = current_presence(state).await;
-    let _ = call(
+    let reply = call(
         state,
         reqwest::Method::POST,
         "/presence",
         Some(json!({ "status": status, "detail": detail, "joinAddress": join_address })),
     )
     .await;
+    // Il server risponde con il totale dei messaggi non letti: lo passiamo all'interfaccia.
+    if let Ok(value) = reply {
+        if let Some(n) = value["unread"].as_u64() {
+            let _ = app.emit("social-unread", n);
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -295,6 +315,21 @@ pub async fn remove_friend(state: State<'_, AppState>, uuid: String) -> Result<(
 pub async fn set_friend_favorite(state: State<'_, AppState>, uuid: String, favorite: bool) -> Result<()> {
     call(state.inner(), reqwest::Method::POST, "/favorite", Some(json!({ "uuid": uuid, "favorite": favorite }))).await?;
     Ok(())
+}
+
+/// Messaggi con un amico: gli ultimi 50, oppure solo quelli con id > `after` (per l'aggiornamento).
+/// Il server segna come letti quelli ricevuti.
+#[tauri::command]
+pub async fn get_chat_messages(state: State<'_, AppState>, uuid: String, after: Option<i64>) -> Result<Vec<DirectMessage>> {
+    let path = format!("/messages?with={}&after={}", urlencoding(&uuid), after.unwrap_or(0).max(0));
+    let value = call(state.inner(), reqwest::Method::GET, &path, None).await?;
+    Ok(serde_json::from_value(value["messages"].clone()).unwrap_or_default())
+}
+
+#[tauri::command]
+pub async fn send_chat_message(state: State<'_, AppState>, uuid: String, text: String) -> Result<DirectMessage> {
+    let value = call(state.inner(), reqwest::Method::POST, "/messages", Some(json!({ "to": uuid, "text": text }))).await?;
+    serde_json::from_value(value["message"].clone()).map_err(|_| msg("Risposta del server non valida"))
 }
 
 /// Encoding minimale per il parametro di ricerca.

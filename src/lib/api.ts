@@ -8,6 +8,7 @@ import type {
   CrashAnalysis,
   CreateInstanceRequest,
   DeviceCode,
+  DirectMessage,
   FriendsData,
   SearchUser,
   GameVersions,
@@ -118,6 +119,8 @@ export const api = {
   removeFriend: (uuid: string) => invoke<void>("remove_friend", { uuid }),
   setFriendFavorite: (uuid: string, favorite: boolean) =>
     invoke<void>("set_friend_favorite", { uuid, favorite }),
+  getChatMessages: (uuid: string, after?: number) => invoke<DirectMessage[]>("get_chat_messages", { uuid, after: after ?? 0 }),
+  sendChatMessage: (uuid: string, text: string) => invoke<DirectMessage>("send_chat_message", { uuid, text }),
 
   // Material 3 In-Game Theme
   applyMaterial3Theme: (instanceId: string, enabled: boolean) =>

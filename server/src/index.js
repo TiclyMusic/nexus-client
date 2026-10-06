@@ -209,6 +209,7 @@ async function handleRemove(req, env, me) {
   await env.DB.batch([
     env.DB.prepare(`DELETE FROM friends WHERE (uuid = ? AND friend_uuid = ?) OR (uuid = ? AND friend_uuid = ?)`).bind(me, uuid, uuid, me),
     env.DB.prepare(`DELETE FROM requests WHERE (from_uuid = ? AND to_uuid = ?) OR (from_uuid = ? AND to_uuid = ?)`).bind(me, uuid, uuid, me),
+    env.DB.prepare(`DELETE FROM messages WHERE (from_uuid = ? AND to_uuid = ?) OR (from_uuid = ? AND to_uuid = ?)`).bind(me, uuid, uuid, me),
   ]);
   return json({ status: "removed" });
 }
@@ -228,7 +229,85 @@ async function handlePresence(req, env, me) {
   await env.DB.prepare(`UPDATE users SET last_seen = ?, presence = ?, detail = ?, join_address = ? WHERE uuid = ?`)
     .bind(now(), String(body.status || "online").slice(0, 20), String(body.detail || "").slice(0, 120), String(body.joinAddress || "").slice(0, 120), me)
     .run();
-  return json({ status: "ok" });
+  // Totale dei messaggi non letti: il launcher lo mostra come badge senza richieste in più.
+  const unread = await env.DB.prepare(`SELECT COUNT(*) AS n FROM messages WHERE to_uuid = ? AND read_at = 0`).bind(me).first();
+  return json({ status: "ok", unread: unread?.n || 0 });
+}
+
+// ---------------------------------------------------------------------------
+// Chat tra amici
+// ---------------------------------------------------------------------------
+
+const MESSAGE_MAX = 1000; // caratteri
+const MESSAGES_PER_MINUTE = 30; // limite anti-spam per utente
+const MESSAGE_RETENTION = 60 * 60 * 24 * 90; // i messaggi più vecchi di 90 giorni vengono cancellati
+
+async function areFriends(env, a, b) {
+  return !!(await env.DB.prepare(`SELECT 1 FROM friends WHERE uuid = ? AND friend_uuid = ?`).bind(a, b).first());
+}
+
+const toMessage = (r) => ({ id: r.id, from: r.from_uuid, to: r.to_uuid, text: r.body, created: r.created });
+
+// GET /messages?with=<uuid>&after=<id> — ultimi 50 messaggi (o i nuovi dopo `after`); segna come letti quelli ricevuti.
+async function handleGetMessages(req, env, me) {
+  const url = new URL(req.url);
+  const other = (url.searchParams.get("with") || "").toLowerCase();
+  const after = Math.max(0, parseInt(url.searchParams.get("after") || "0", 10) || 0);
+  if (!other || !(await areFriends(env, me, other))) return json({ error: "Puoi scrivere solo ai tuoi amici" }, 403);
+
+  const pair = `((from_uuid = ?1 AND to_uuid = ?2) OR (from_uuid = ?2 AND to_uuid = ?1))`;
+  const rows = after
+    ? await env.DB.prepare(`SELECT * FROM messages WHERE ${pair} AND id > ?3 ORDER BY id ASC LIMIT 100`).bind(me, other, after).all()
+    : await env.DB.prepare(`SELECT * FROM (SELECT * FROM messages WHERE ${pair} ORDER BY id DESC LIMIT 50) ORDER BY id ASC`).bind(me, other).all();
+  await env.DB.prepare(`UPDATE messages SET read_at = ? WHERE to_uuid = ? AND from_uuid = ? AND read_at = 0`).bind(now(), me, other).run();
+  return json({ messages: (rows.results || []).map(toMessage) });
+}
+
+// POST /messages { to, text }
+async function handleSendMessage(req, env, me) {
+  const { to, text } = await req.json().catch(() => ({}));
+  const other = String(to || "").toLowerCase();
+  const body = String(text || "").replace(/\r\n?/g, "\n").trim();
+  if (!body) return json({ error: "Messaggio vuoto" }, 400);
+  if (body.length > MESSAGE_MAX) return json({ error: `Messaggio troppo lungo (massimo ${MESSAGE_MAX} caratteri)` }, 400);
+  if (!other || !(await areFriends(env, me, other))) return json({ error: "Puoi scrivere solo ai tuoi amici" }, 403);
+
+  const recent = await env.DB.prepare(`SELECT COUNT(*) AS n FROM messages WHERE from_uuid = ? AND created > ?`)
+    .bind(me, Date.now() - 60_000)
+    .first();
+  if ((recent?.n || 0) >= MESSAGES_PER_MINUTE) return json({ error: "Stai scrivendo troppo in fretta, aspetta un attimo" }, 429);
+
+  const created = Date.now();
+  const res = await env.DB.prepare(`INSERT INTO messages (from_uuid, to_uuid, body, created) VALUES (?, ?, ?, ?)`)
+    .bind(me, other, body, created)
+    .run();
+  // pulizia occasionale dei messaggi vecchi (circa una volta ogni 50 invii)
+  if (Math.random() < 0.02) {
+    await env.DB.prepare(`DELETE FROM messages WHERE created < ?`).bind((now() - MESSAGE_RETENTION) * 1000).run();
+  }
+  return json({ message: { id: res.meta.last_row_id, from: me, to: other, text: body, created } });
+}
+
+// ---------------------------------------------------------------------------
+// Statistiche pubbliche (solo totali, nessun dato personale) per nexusmc.online
+// ---------------------------------------------------------------------------
+
+async function handleStats(req, env, ctx) {
+  const cache = caches.default;
+  const key = new Request(new URL("/stats", req.url).toString());
+  const hit = await cache.match(key);
+  if (hit) return hit;
+
+  const row = await env.DB.prepare(
+    `SELECT COUNT(*) AS registered, SUM(CASE WHEN last_seen >= ? THEN 1 ELSE 0 END) AS online FROM users WHERE last_seen > 0`,
+  )
+    .bind(now() - ONLINE_WINDOW)
+    .first();
+  const res = new Response(JSON.stringify({ registered: row?.registered || 0, online: row?.online || 0, updated: now() }), {
+    headers: { "content-type": "application/json", "access-control-allow-origin": "*", "cache-control": "public, max-age=30" },
+  });
+  ctx.waitUntil(cache.put(key, res.clone()));
+  return res;
 }
 
 // GET /friends
@@ -241,6 +320,12 @@ async function handleFriends(env, me) {
   )
     .bind(me)
     .all();
+  const unreadRows = await env.DB.prepare(
+    `SELECT from_uuid, COUNT(*) AS n FROM messages WHERE to_uuid = ? AND read_at = 0 GROUP BY from_uuid`,
+  )
+    .bind(me)
+    .all();
+  const unread = Object.fromEntries((unreadRows.results || []).map((r) => [r.from_uuid, r.n]));
   const friends = (friendRows.results || []).map((r) => {
     const online = t - (r.last_seen || 0) < ONLINE_WINDOW;
     return {
@@ -251,6 +336,7 @@ async function handleFriends(env, me) {
       status: online ? r.presence || "online" : "offline",
       detail: online ? r.detail || "" : "",
       joinAddress: online ? r.join_address || "" : "",
+      unread: unread[r.uuid] || 0,
     };
   });
 
@@ -273,7 +359,7 @@ async function handleFriends(env, me) {
 }
 
 export default {
-  async fetch(req, env) {
+  async fetch(req, env, ctx) {
     if (req.method === "OPTIONS") {
       return new Response(null, {
         headers: {
@@ -288,6 +374,7 @@ export default {
     try {
       if (path === "/" ) return json({ ok: true, service: "nexus-social" });
       if (path === "/auth" && req.method === "POST") return await handleAuth(req, env);
+      if (path === "/stats" && req.method === "GET") return await handleStats(req, env, ctx);
 
       const user = await requireUser(req, env);
       if (!user) return json({ error: "Sessione non valida, riautenticati" }, 401);
@@ -300,6 +387,8 @@ export default {
       if (path === "/remove" && req.method === "POST") return await handleRemove(req, env, me);
       if (path === "/favorite" && req.method === "POST") return await handleFavorite(req, env, me);
       if (path === "/presence" && req.method === "POST") return await handlePresence(req, env, me);
+      if (path === "/messages" && req.method === "GET") return await handleGetMessages(req, env, me);
+      if (path === "/messages" && req.method === "POST") return await handleSendMessage(req, env, me);
 
       return json({ error: "Not found" }, 404);
     } catch (e) {

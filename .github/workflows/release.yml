@@ -1,6 +1,6 @@
 # Compila Nexus Launcher per Windows, macOS (DMG universale Intel + Apple Silicon) e Linux
 # (AppImage, deb, rpm, pacchetto pacman per Arch) e crea la GitHub Release con gli installer: https://nexusmc.online
-# linka https://github.com/matthias-peterlini/Nexus-client/releases/latest/download/<file>.
+# linka https://github.com/TiclyMusic/nexus-client/releases/latest/download/<file>.
 #
 # Avvio: push di un tag `v*` (es. `git tag v0.3.0 && git push origin v0.3.0`) oppure
 # manualmente da "Actions → release → Run workflow". Nessun secret richiesto.

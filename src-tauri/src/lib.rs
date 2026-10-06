@@ -60,7 +60,7 @@ pub fn run() {
                 loop {
                     tokio::time::sleep(std::time::Duration::from_secs(30)).await;
                     let state = hb.state::<AppState>();
-                    friends::heartbeat(&state).await;
+                    friends::heartbeat(&hb, &state).await;
                 }
             });
             Ok(())
@@ -125,6 +125,8 @@ pub fn run() {
             friends::respond_friend_request,
             friends::remove_friend,
             friends::set_friend_favorite,
+            friends::get_chat_messages,
+            friends::send_chat_message,
             // Tema Minecraft Material 3
             minecraft::theme::apply_material3_theme,
             minecraft::theme::is_material3_theme_enabled,

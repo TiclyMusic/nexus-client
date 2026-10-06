@@ -4,6 +4,7 @@ import { api, errorMessage, isTauri } from "../../lib/api";
 import { useApp } from "../../lib/store";
 import type { FriendPresence, SearchUser } from "../../lib/types";
 import { Avatar, bodyUrl } from "../../components/shell";
+import { ChatDialog } from "./ChatDialog";
 import { Badge, Button, cn, Dialog, EmptyState, Icon, IconButton, Spinner } from "../../components/ui";
 
 const STATUS_DOT: Record<string, string> = {
@@ -174,6 +175,7 @@ export function FriendsPage() {
   const [tunnelPort, setTunnelPort] = useState<number>(25565);
   const [tunnelLoading, setTunnelLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [chatWith, setChatWith] = useState<FriendPresence | null>(null);
 
   useEffect(() => {
     refreshFriends();
@@ -393,11 +395,13 @@ export function FriendsPage() {
                   <div className="flex items-center gap-1">
                     <span className="truncate text-base font-semibold">{f.name}</span>
                     <IconButton
-                      icon={f.favorite ? "star" : "star_border"}
-                      label={f.favorite ? "Rimuovi dai preferiti" : "Preferito"}
+                      icon="star"
+                      selected={f.favorite}
+                      label={f.favorite ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}
                       size={28}
-                      className={f.favorite ? "text-amber-400" : "text-on-surface-variant opacity-60"}
-                      onClick={() => act(f.uuid, () => api.setFriendFavorite(f.uuid, !f.favorite))}
+                      className={f.favorite ? "text-amber-400!" : "opacity-60 hover:opacity-100"}
+                      disabled={busyId === f.uuid}
+                      onClick={() => act(f.uuid, () => api.setFriendFavorite(f.uuid, !f.favorite), f.favorite ? `${f.name} rimosso dai preferiti` : `${f.name} aggiunto ai preferiti`)}
                     />
                   </div>
                   {f.status === "hosting" ? (
@@ -426,6 +430,14 @@ export function FriendsPage() {
                     Entra
                   </Button>
                 )}
+                <div className="relative">
+                  <IconButton icon="chat" label={`Chat con ${f.name}`} size={36} variant="tonal" onClick={() => setChatWith(f)} />
+                  {(f.unread ?? 0) > 0 && (
+                    <span className="pointer-events-none absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold text-on-error">
+                      {(f.unread ?? 0) > 9 ? "9+" : f.unread}
+                    </span>
+                  )}
+                </div>
                 <IconButton icon="person_remove" label="Rimuovi amico" size={32} className="text-on-surface-variant hover:text-error" onClick={() => act(f.uuid, () => api.removeFriend(f.uuid), `${f.name} rimosso`)} />
               </div>
             </div>
@@ -470,6 +482,7 @@ export function FriendsPage() {
       )}
 
       <AddFriendDialog open={addOpen} onClose={() => setAddOpen(false)} />
+      <ChatDialog friend={chatWith} onClose={() => setChatWith(null)} />
     </div>
   );
 }

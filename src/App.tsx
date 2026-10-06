@@ -23,6 +23,7 @@ function useBackendEvents() {
       listen<Progress>("task-progress", (e) => s().setProgress(e.payload)),
       listen<string>("task-finished", (e) => s().clearProgress(e.payload)),
       listen<GameLog>("game-log", (e) => s().pushLog(e.payload)),
+      listen<number>("social-unread", (e) => s().setUnreadTotal(e.payload)),
       listen<{ instanceId: string; pid: number }>("game-started", (e) => s().setRunning(e.payload.instanceId, e.payload.pid)),
       listen<GameExit>("game-exit", (e) => {
         const { instanceId, crashed, code } = e.payload;

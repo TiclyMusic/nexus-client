@@ -79,6 +79,17 @@ export interface FriendPresence {
   status: FriendStatus;
   detail: string;
   joinAddress: string;
+  /** Messaggi di chat non letti da questo amico. */
+  unread?: number;
+}
+
+/** Messaggio della chat tra amici (`created` in millisecondi). */
+export interface DirectMessage {
+  id: number;
+  from: string;
+  to: string;
+  text: string;
+  created: number;
 }
 
 export interface UserRef {

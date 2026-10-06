@@ -5,7 +5,7 @@ Pagina di download di Nexus Launcher:
 | Cosa | Dove |
 |---|---|
 | Pagina (`public/`) | **Netlify** → https://nexusmc.online |
-| Installer (Windows, macOS, Linux) | **GitHub Releases** → https://github.com/matthias-peterlini/Nexus-client/releases/latest |
+| Installer (Windows, macOS, Linux) | **GitHub Releases** → https://github.com/TiclyMusic/nexus-client/releases/latest |
 | Video promo (`cdn/`) | **Cloudflare Workers** (account personale) → https://nexus-site.matthias-peterlini.workers.dev (`noindex`) |
 
 `index.html` linka `releases/latest/download/<file>` (nomi fissi, puntano sempre all'ultima release)

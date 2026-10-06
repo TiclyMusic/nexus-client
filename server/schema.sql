@@ -26,3 +26,15 @@ CREATE TABLE IF NOT EXISTS friends (
   since       INTEGER NOT NULL,
   PRIMARY KEY (uuid, friend_uuid)
 );
+
+-- Chat tra amici. created in millisecondi; read_at = 0 finché il destinatario non apre la chat.
+CREATE TABLE IF NOT EXISTS messages (
+  id        INTEGER PRIMARY KEY AUTOINCREMENT,
+  from_uuid TEXT NOT NULL,
+  to_uuid   TEXT NOT NULL,
+  body      TEXT NOT NULL,
+  created   INTEGER NOT NULL,
+  read_at   INTEGER DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_messages_pair ON messages(from_uuid, to_uuid, id);
+CREATE INDEX IF NOT EXISTS idx_messages_unread ON messages(to_uuid, read_at);
