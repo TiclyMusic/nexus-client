@@ -14,6 +14,7 @@ import { SettingsPage } from "./features/settings/SettingsPage";
 import { api, errorMessage, isTauri } from "./lib/api";
 import { useApp } from "./lib/store";
 import { applyTheme } from "./lib/theme";
+import { startAutoUpdate } from "./lib/updater";
 import type { GameExit, GameLog, InboxMessage, Progress } from "./lib/types";
 
 function useBackendEvents() {
@@ -61,6 +62,7 @@ export default function App() {
         const running = await api.runningInstances();
         Object.entries(running).forEach(([id, pid]) => setRunning(id, pid));
         setReady(true);
+        startAutoUpdate();
         // amici e gruppi in background: badge dei non letti e sessione per le notifiche di chat
         useApp.getState().refreshFriends().then(() => useApp.getState().refreshGroups());
       } catch (e) {

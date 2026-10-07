@@ -8,7 +8,7 @@
 # Uso manuale: `makepkg -si` in questa cartella. Per pubblicarlo su AUR come nexus-launcher-bin
 # aggiorna pkgver, esegui `updpkgsums` e genera .SRCINFO con `makepkg --printsrcinfo > .SRCINFO`.
 pkgname=nexus-launcher-bin
-pkgver=0.4.1
+pkgver=0.4.2
 pkgrel=1
 pkgdesc="Launcher per Minecraft: Java Edition con mod Modrinth, amici online e Copilot AI"
 arch=('x86_64')

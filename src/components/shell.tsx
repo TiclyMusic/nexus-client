@@ -338,10 +338,34 @@ export function SnackbarHost() {
 // Notifiche a comparsa (in basso a destra)
 // ---------------------------------------------------------------------------
 
+function UpdateCard() {
+  const update = useApp((s) => s.update);
+  if (!update) return null;
+  const text =
+    update.stage === "waiting"
+      ? "Si installa da solo appena chiudi il gioco."
+      : update.stage === "downloading"
+        ? `Download in corso${update.progress != null ? ` · ${Math.round(update.progress * 100)}%` : "…"}`
+        : "Installazione: Nexus si riavvia tra un attimo.";
+  return (
+    <div role="status" className="pointer-events-auto flex animate-notice items-start gap-3 rounded-3xl bg-primary-container p-3.5 text-on-primary-container elev-3">
+      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary">
+        <Icon name="system_update_alt" size={22} />
+      </div>
+      <div className="min-w-0 flex-1 pt-0.5">
+        <p className="text-sm font-semibold">Aggiornamento a Nexus {update.version}</p>
+        <p className="mt-0.5 text-sm opacity-80">{text}</p>
+        {update.stage !== "waiting" && <WavyProgress value={update.stage === "downloading" ? update.progress : null} className="mt-2" />}
+      </div>
+    </div>
+  );
+}
+
 export function NotificationHost() {
   const { notices, dismissNotice } = useApp();
   return (
     <div className="pointer-events-none fixed right-5 bottom-5 z-[70] flex w-[360px] max-w-[calc(100vw-40px)] flex-col items-stretch gap-2.5">
+      <UpdateCard />
       {notices.map((n) => (
         <div
           key={n.id}

@@ -3,7 +3,12 @@
 # linka https://github.com/TiclyMusic/nexus-client/releases/latest/download/<file>.
 #
 # Avvio: push di un tag `v*` (es. `git tag v0.3.0 && git push origin v0.3.0`) oppure
-# manualmente da "Actions → release → Run workflow". Nessun secret richiesto.
+# manualmente da "Actions → release → Run workflow".
+#
+# Aggiornamenti automatici: con il secret TAURI_SIGNING_PRIVATE_KEY (chiave privata creata con
+# `npx tauri signer generate`) gli installer vengono firmati e la release include latest.json,
+# che il launcher controlla per aggiornarsi da solo. Senza il secret la build funziona lo stesso
+# ma senza aggiornamento automatico.
 name: release
 
 on:
@@ -66,7 +71,15 @@ jobs:
         env:
           # linuxdeploy (AppImage) fallisce a fare lo strip delle librerie recenti di Ubuntu
           NO_STRIP: "true"
-        run: npx tauri build ${{ matrix.args }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          if [ -z "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+            echo "::warning::TAURI_SIGNING_PRIVATE_KEY non impostato: niente aggiornamenti automatici"
+            npx tauri build ${{ matrix.args }} --config '{"bundle":{"createUpdaterArtifacts":false}}'
+          else
+            npx tauri build ${{ matrix.args }}
+          fi
 
       - name: Raccogli gli installer (nomi stabili)
         run: |
@@ -75,13 +88,21 @@ jobs:
           case "${{ matrix.name }}" in
             windows)
               cp "$B"/nsis/*-setup.exe out/nexus-launcher-setup.exe
+              cp "$B"/nsis/*-setup.exe.sig out/nexus-launcher-setup.exe.sig 2>/dev/null || true
               cp "$B"/msi/*.msi out/nexus-launcher.msi ;;
             linux)
               cp "$B"/appimage/*.AppImage out/nexus-launcher.AppImage
+              cp "$B"/appimage/*.AppImage.sig out/nexus-launcher.AppImage.sig 2>/dev/null || true
               cp "$B"/deb/*.deb out/nexus-launcher.deb
               cp "$B"/rpm/*.rpm out/nexus-launcher.rpm ;;
             macos)
-              cp src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg out/nexus-launcher.dmg ;;
+              M=src-tauri/target/universal-apple-darwin/release/bundle
+              cp "$M"/dmg/*.dmg out/nexus-launcher.dmg
+              # pacchetto usato dall'aggiornamento automatico su macOS
+              if ls "$M"/macos/*.app.tar.gz >/dev/null 2>&1; then
+                cp "$M"/macos/*.app.tar.gz out/nexus-launcher.app.tar.gz
+                cp "$M"/macos/*.app.tar.gz.sig out/nexus-launcher.app.tar.gz.sig
+              fi ;;
           esac
           ls -la out
 
@@ -146,6 +167,31 @@ jobs:
       - name: Versione
         id: v
         run: echo "version=$(node -p "require('./src-tauri/tauri.conf.json').version")" >> "$GITHUB_OUTPUT"
+
+      # Manifest per l'aggiornamento automatico (solo se gli installer sono stati firmati).
+      - name: latest.json
+        env:
+          TAG: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', steps.v.outputs.version) }}
+          VERSION: ${{ steps.v.outputs.version }}
+          REPO: ${{ github.repository }}
+        run: |
+          node - <<'JS'
+          const fs = require("fs");
+          const { TAG, VERSION, REPO } = process.env;
+          const url = (f) => `https://github.com/${REPO}/releases/download/${TAG}/${f}`;
+          const entry = (f) => fs.existsSync(`dist/${f}.sig`) ? { signature: fs.readFileSync(`dist/${f}.sig`, "utf8").trim(), url: url(f) } : null;
+          const platforms = {};
+          const win = entry("nexus-launcher-setup.exe");
+          const mac = entry("nexus-launcher.app.tar.gz");
+          const linux = entry("nexus-launcher.AppImage");
+          if (win) platforms["windows-x86_64"] = win;
+          if (mac) { platforms["darwin-x86_64"] = mac; platforms["darwin-aarch64"] = mac; }
+          if (linux) platforms["linux-x86_64"] = linux;
+          if (!Object.keys(platforms).length) { console.log("Installer non firmati: niente latest.json"); process.exit(0); }
+          fs.writeFileSync("dist/latest.json", JSON.stringify({ version: VERSION, notes: `Nexus Launcher ${VERSION}`, pub_date: new Date().toISOString(), platforms }, null, 2));
+          console.log(fs.readFileSync("dist/latest.json", "utf8"));
+          JS
+          rm -f dist/*.sig
 
       # Nomi dei file fissi: https://github.com/<repo>/releases/latest/download/<file> punta sempre
       # all'ultima versione ed è il link usato da nexusmc.online.

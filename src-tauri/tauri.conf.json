@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Nexus Launcher",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "identifier": "dev.nexus.launcher",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -40,7 +40,15 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis", "msi", "appimage", "deb", "rpm", "app", "dmg"],
+    "targets": [
+      "nsis",
+      "msi",
+      "appimage",
+      "deb",
+      "rpm",
+      "app",
+      "dmg"
+    ],
     "category": "Game",
     "publisher": "Nexus Launcher contributors",
     "copyright": "GPL-3.0-or-later",
@@ -54,11 +62,16 @@
       "icons/icon.ico"
     ],
     "windows": {
-      "webviewInstallMode": { "type": "downloadBootstrapper" },
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      },
       "nsis": {
         "installMode": "currentUser",
         "installerIcon": "icons/icon.ico",
-        "languages": ["Italian", "English"],
+        "languages": [
+          "Italian",
+          "English"
+        ],
         "displayLanguageSelector": true
       }
     },
@@ -66,14 +79,38 @@
       "minimumSystemVersion": "10.15",
       "signingIdentity": "-",
       "dmg": {
-        "appPosition": { "x": 180, "y": 170 },
-        "applicationFolderPosition": { "x": 480, "y": 170 }
+        "appPosition": {
+          "x": 180,
+          "y": 170
+        },
+        "applicationFolderPosition": {
+          "x": 480,
+          "y": 170
+        }
       }
     },
     "linux": {
-      "appimage": { "bundleMediaFramework": false },
-      "deb": { "section": "games" },
-      "rpm": { "release": "1" }
+      "appimage": {
+        "bundleMediaFramework": false
+      },
+      "deb": {
+        "section": "games"
+      },
+      "rpm": {
+        "release": "1"
+      }
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDdCNkIzRTFFNDdDMjlERTQKUldUa25jSkhIajVyZTFSVFRuT25XVSszVThZWjRETDlOekliSW9SRnZiTzJnYjlJY25iVzBVUHAK",
+      "endpoints": [
+        "https://github.com/TiclyMusic/nexus-client/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }

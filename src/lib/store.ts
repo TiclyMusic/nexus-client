@@ -29,6 +29,14 @@ export interface Notice {
   action?: { label: string; run: () => void };
 }
 
+/** Aggiornamento del launcher in corso (vedi lib/updater.ts). */
+export interface UpdateState {
+  version: string;
+  /** waiting = aspetta che il gioco sia chiuso */
+  stage: "waiting" | "downloading" | "installing";
+  progress: number | null;
+}
+
 /** Chat aperta: privata con un amico o di gruppo. */
 export type ChatTarget = { kind: "direct"; uuid: string; name: string } | { kind: "group"; id: number; name: string };
 
@@ -94,6 +102,8 @@ interface AppStore {
   snack: (text: string, tone?: Snack["tone"], action?: Snack["action"]) => void;
   dismissSnack: (id: number) => void;
   notices: Notice[];
+  update: UpdateState | null;
+  setUpdate: (u: UpdateState | null) => void;
   notify: (n: Omit<Notice, "id">) => void;
   dismissNotice: (id: number) => void;
 
@@ -312,6 +322,8 @@ export const useApp = create<AppStore>((set, get) => ({
   },
   dismissSnack: (id) => set((s) => ({ snacks: s.snacks.filter((x) => x.id !== id) })),
   notices: [],
+  update: null,
+  setUpdate: (update) => set({ update }),
   notify: (n) => {
     const id = ++noticeSeq;
     set((s) => ({ notices: [...s.notices.slice(-3), { ...n, id }] }));
