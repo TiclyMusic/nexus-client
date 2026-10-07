@@ -301,7 +301,26 @@ fn spawn_reader<R: AsyncRead + Unpin + Send + 'static>(app: AppHandle, id: Strin
     });
 }
 
-pub async fn launch(app: &AppHandle, state: &AppState, id: &str) -> Result<u32> {
+/// Argomenti per entrare subito in un server all'avvio: `--quickPlayMultiplayer` (1.20+)
+/// oppure `--server/--port` sulle versioni che non lo conoscono.
+fn join_args(version: &crate::minecraft::version::VersionJson, address: &str) -> Vec<String> {
+    let address = address.trim();
+    let (host, port) = match address.rsplit_once(':') {
+        Some((h, p)) if p.parse::<u16>().is_ok() => (h.to_string(), p.to_string()),
+        _ => (address.to_string(), "25565".to_string()),
+    };
+    let quick_play = version
+        .arguments
+        .as_ref()
+        .is_some_and(|a| format!("{:?}", a.game).contains("quickPlayMultiplayer"));
+    if quick_play {
+        vec!["--quickPlayMultiplayer".into(), format!("{host}:{port}")]
+    } else {
+        vec!["--server".into(), host, "--port".into(), port]
+    }
+}
+
+pub async fn launch(app: &AppHandle, state: &AppState, id: &str, join: Option<&str>) -> Result<u32> {
     if state.running.lock().unwrap().contains_key(id) {
         return Err(msg("Questa istanza è già in esecuzione"));
     }
@@ -318,7 +337,10 @@ pub async fn launch(app: &AppHandle, state: &AppState, id: &str) -> Result<u32> 
         let s = state.settings.read().await;
         (s.jvm_args.clone(), s.optimized_gc)
     };
-    let (args, game_dir) = build_command(state, &instance, &prepared, &account, &jvm_global, gc)?;
+    let (mut args, game_dir) = build_command(state, &instance, &prepared, &account, &jvm_global, gc)?;
+    if let Some(address) = join.filter(|a| !a.trim().is_empty()) {
+        args.extend(join_args(&prepared.version, address));
+    }
 
     let shown = args
         .iter()
@@ -418,8 +440,8 @@ pub async fn install_instance(app: AppHandle, state: State<'_, AppState>, id: St
 }
 
 #[tauri::command]
-pub async fn launch_instance(app: AppHandle, state: State<'_, AppState>, id: String) -> Result<u32> {
-    match launch(&app, state.inner(), &id).await {
+pub async fn launch_instance(app: AppHandle, state: State<'_, AppState>, id: String, join: Option<String>) -> Result<u32> {
+    match launch(&app, state.inner(), &id, join.as_deref()).await {
         Ok(pid) => Ok(pid),
         Err(e) => {
             emit_log(&app, &id, "error", &format!("Avvio fallito: {e}"));

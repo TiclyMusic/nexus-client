@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS users (
   last_seen    INTEGER DEFAULT 0,
   presence     TEXT DEFAULT '',   -- online | playing | hosting
   detail       TEXT DEFAULT '',   -- es. "Survival Performance · 1.21 Fabric"
-  join_address TEXT DEFAULT ''    -- indirizzo per unirsi se sta hostando
+  join_address TEXT DEFAULT '',   -- indirizzo per unirsi se sta hostando o è su un server
+  mc_version   TEXT DEFAULT ''    -- versione di Minecraft in uso
 );
 CREATE INDEX IF NOT EXISTS idx_users_name ON users(name_lower);
 
@@ -65,3 +66,12 @@ CREATE TABLE IF NOT EXISTS group_messages (
   created   INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_group_messages_group ON group_messages(group_id, id);
+
+-- Richieste "fammi entrare nel tuo mondo" (consegnate dall'/inbox, valide pochi minuti).
+CREATE TABLE IF NOT EXISTS join_requests (
+  id        INTEGER PRIMARY KEY AUTOINCREMENT,
+  from_uuid TEXT NOT NULL,
+  to_uuid   TEXT NOT NULL,
+  created   INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_join_requests_to ON join_requests(to_uuid, id);

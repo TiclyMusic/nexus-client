@@ -64,6 +64,61 @@ pub fn lan_port_from_log(line: &str) -> Option<u16> {
         .filter(|p| *p >= 1024)
 }
 
+/// Dove si trova il giocatore, ricavato dal log del client.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Activity {
+    /// In un mondo singleplayer (non ancora aperto in LAN).
+    Singleplayer,
+    /// Connesso a un server: indirizzo "host" o "host:porta".
+    Server(String),
+}
+
+/// Server a cui il client si sta connettendo: "[Render thread/INFO]: Connecting to mc.example.net, 25565".
+pub fn server_from_log(line: &str) -> Option<String> {
+    if !(line.contains("Render thread") || line.contains("Client thread") || line.contains("main/")) {
+        return None;
+    }
+    let rest = &line[line.find("Connecting to ")? + 14..];
+    let (host, port) = rest.trim().split_once(", ")?;
+    let port = port.trim().parse::<u16>().ok()?;
+    let host = host.trim();
+    if host.is_empty() || host.contains(' ') {
+        return None;
+    }
+    Some(if port == 25565 { host.to_string() } else { format!("{host}:{port}") })
+}
+
+/// Indirizzi raggiungibili solo dalla rete locale di chi gioca: agli amici non servono.
+pub fn is_private_address(address: &str) -> bool {
+    let host = address.rsplit_once(':').map_or(address, |(h, _)| h).to_ascii_lowercase();
+    host == "localhost"
+        || host.starts_with("127.")
+        || host.starts_with("10.")
+        || host.starts_with("192.168.")
+        || (host.starts_with("172.") && host.split('.').nth(1).and_then(|n| n.parse::<u8>().ok()).is_some_and(|n| (16..=31).contains(&n)))
+        || host == "0.0.0.0"
+}
+
+fn set_activity(app: &AppHandle, instance_id: &str, activity: Option<Activity>) {
+    let state = app.state::<AppState>();
+    let changed = {
+        let mut map = state.activity.lock().unwrap();
+        let before = map.get(instance_id).cloned();
+        match activity.clone() {
+            Some(a) => map.insert(instance_id.to_string(), a),
+            None => map.remove(instance_id),
+        };
+        before != activity
+    };
+    if changed {
+        let app = app.clone();
+        tauri::async_runtime::spawn(async move {
+            let state = app.state::<AppState>();
+            crate::friends::heartbeat(&app, &state).await;
+        });
+    }
+}
+
 /// Il server integrato si ferma quando il giocatore esce dal mondo.
 pub fn lan_closed_from_log(line: &str) -> bool {
     line.contains("Stopping server")
@@ -144,6 +199,10 @@ pub fn on_game_log(app: &AppHandle, instance_id: &str, line: &str) {
         });
     } else if lan_closed_from_log(line) {
         on_game_exit(app, instance_id);
+    } else if line.contains("Starting integrated minecraft server") {
+        set_activity(app, instance_id, Some(Activity::Singleplayer));
+    } else if let Some(address) = server_from_log(line) {
+        set_activity(app, instance_id, Some(Activity::Server(address)));
     }
 }
 
@@ -152,7 +211,8 @@ pub fn on_game_exit(app: &AppHandle, instance_id: &str) {
     let (app, id) = (app.clone(), instance_id.to_string());
     tauri::async_runtime::spawn(async move {
         let state = app.state::<AppState>();
-        if close(&app, &state, Some(&id)).await {
+        let was_active = state.activity.lock().unwrap().remove(&id).is_some();
+        if close(&app, &state, Some(&id)).await || was_active {
             crate::friends::heartbeat(&app, &state).await;
         }
     });
@@ -174,5 +234,8 @@ mod tests {
         assert_eq!(lan_port_from_log("[CHAT] Partita locale ospitata sulla porta 50000"), Some(50000));
         assert_eq!(lan_port_from_log("[Server thread/INFO]: Preparing spawn area: 83%"), None);
         assert!(lan_closed_from_log("[Server thread/INFO]: Stopping server"));
+        assert_eq!(server_from_log("[18:30:01] [Render thread/INFO]: Connecting to mc.hypixel.net, 25565"), Some("mc.hypixel.net".into()));
+        assert_eq!(server_from_log("[Render thread/INFO]: Connecting to bore.pub, 41234"), Some("bore.pub:41234".into()));
+        assert!(is_private_address("192.168.1.20:25565") && is_private_address("localhost") && !is_private_address("bore.pub:4123"));
     }
 }

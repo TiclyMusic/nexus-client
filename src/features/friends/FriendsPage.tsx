@@ -10,6 +10,7 @@ import { Badge, Button, cn, Dialog, EmptyState, Icon, IconButton, Spinner } from
 const STATUS_DOT: Record<string, string> = {
   hosting: "bg-primary animate-pulse",
   playing: "bg-secondary",
+  server: "bg-secondary",
   online: "bg-tertiary",
   offline: "bg-outline",
 };
@@ -167,7 +168,7 @@ function AddFriendDialog({ open, onClose }: { open: boolean; onClose: () => void
 }
 
 export function FriendsPage() {
-  const { friends, refreshFriends, refreshGroups, openChat, snack, navigate, accounts } = useApp();
+  const { friends, refreshFriends, refreshGroups, openChat, snack, navigate, accounts, joinFriend, pendingJoins } = useApp();
   const hasMsAccount = accounts.some((a) => a.kind === "microsoft");
   const me = accounts.find((a) => a.active && a.kind === "microsoft")?.username;
   const [addOpen, setAddOpen] = useState(false);
@@ -329,6 +330,10 @@ export function FriendsPage() {
                       </div>
                       {f.joinAddress && <p className="mt-0.5 truncate font-mono text-[11px] text-on-surface-variant">{f.joinAddress}</p>}
                     </div>
+                  ) : f.status === "server" ? (
+                    <p className="mt-1 flex min-w-0 items-center gap-1.5 text-xs font-medium text-secondary">
+                      <Icon name="dns" size={16} /> <span className="truncate">{f.detail || "Su un server"}</span>
+                    </p>
                   ) : f.status === "playing" ? (
                     <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-secondary">
                       <Icon name="sports_esports" size={16} /> {f.detail || "In gioco"}
@@ -343,11 +348,23 @@ export function FriendsPage() {
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
-                {f.status === "hosting" && f.joinAddress && (
-                  <Button size="sm" icon={copied === f.joinAddress ? "check" : "login"} onClick={() => copyText(f.joinAddress, "Indirizzo del mondo")}>
-                    {copied === f.joinAddress ? "Copiato" : "Entra"}
+                {f.online && f.joinAddress ? (
+                  <>
+                    <Button size="sm" icon="login" onClick={() => joinFriend(f)}>
+                      Entra
+                    </Button>
+                    <IconButton
+                      icon={copied === f.joinAddress ? "check" : "content_copy"}
+                      label={`Copia l'indirizzo (${f.joinAddress})`}
+                      size={32}
+                      onClick={() => copyText(f.joinAddress, "Indirizzo")}
+                    />
+                  </>
+                ) : f.status === "playing" ? (
+                  <Button size="sm" variant="tonal" icon="door_open" loading={!!pendingJoins[f.uuid]} onClick={() => joinFriend(f)}>
+                    {pendingJoins[f.uuid] ? "In attesa…" : "Chiedi di entrare"}
                   </Button>
-                )}
+                ) : null}
                 <div className="relative">
                   <IconButton icon="chat" label={`Chat con ${f.name}`} size={36} variant="tonal" onClick={() => openChat({ kind: "direct", uuid: f.uuid, name: f.name })} />
                   {(f.unread ?? 0) > 0 && (

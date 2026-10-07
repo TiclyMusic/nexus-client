@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { api, errorMessage } from "./api";
 import { applyTheme, DEFAULT_UI } from "./theme";
-import type { AccountInfo, FriendsData, GameLog, Group, InboxMessage, Instance, Progress, ProjectType, Settings, SystemInfo, UiPrefs } from "./types";
+import type { AccountInfo, FriendPresence, FriendsData, GameLog, Group, InboxMessage, Instance, Progress, ProjectType, Settings, SystemInfo, UiPrefs } from "./types";
 
 export type Page = "home" | "instance" | "browse" | "accounts" | "settings" | "friends";
 
@@ -97,7 +97,37 @@ interface AppStore {
   notify: (n: Omit<Notice, "id">) => void;
   dismissNotice: (id: number) => void;
 
-  launch: (id: string) => Promise<void>;
+  launch: (id: string, join?: string) => Promise<void>;
+  /** Amici a cui abbiamo chiesto di entrare: uuid → quando (entriamo appena aprono il mondo). */
+  pendingJoins: Record<string, number>;
+  /** Entra nel mondo o nel server di un amico, oppure chiedigli di aprire il mondo. */
+  joinFriend: (friend: FriendPresence) => Promise<void>;
+}
+
+const JOIN_WAIT_MS = 5 * 60_000;
+let joinPoll: ReturnType<typeof setInterval> | null = null;
+
+/** Istanza con cui entrare: stessa versione dell'amico (la più usata di recente), altrimenti una nuova vanilla. */
+async function instanceFor(mcVersion: string | undefined): Promise<string> {
+  const { instances, refreshInstances, settings } = useApp.getState();
+  const recent = (list: Instance[]) => [...list].sort((a, b) => (b.lastPlayed ?? "").localeCompare(a.lastPlayed ?? ""));
+  if (!mcVersion) {
+    const any = recent(instances)[0];
+    if (any) return any.id;
+    throw new Error("Crea prima un'istanza per poter entrare");
+  }
+  const same = recent(instances.filter((i) => i.mcVersion === mcVersion))[0];
+  if (same) return same.id;
+  const inst = await api.createInstance({
+    name: `Vanilla ${mcVersion}`,
+    mcVersion,
+    loader: "vanilla",
+    loaderVersion: null,
+    maxRamMb: settings?.defaultMaxRamMb,
+    icon: "group",
+  });
+  await refreshInstances();
+  return inst.id;
 }
 
 const MAX_LOG_LINES = 5000;
@@ -152,6 +182,11 @@ export const useApp = create<AppStore>((set, get) => ({
     try {
       const friends = await api.getFriends();
       set({ friends, unreadTotal: countUnread(friends, get().groups) });
+      // chi aspettavamo ha aperto il mondo: entriamo
+      for (const f of friends.friends) {
+        const asked = get().pendingJoins[f.uuid];
+        if (asked && Date.now() - asked < JOIN_WAIT_MS && f.joinAddress) get().joinFriend(f);
+      }
     } catch (e) {
       // errori del server amici non devono spammare snackbar: li mostra la pagina
       console.warn("refreshFriends", errorMessage(e));
@@ -176,6 +211,14 @@ export const useApp = create<AppStore>((set, get) => ({
   },
   onInboxMessage: (m) => {
     const { chat, notify, openChat } = get();
+    if (m.kind === "join") {
+      notify({
+        title: `${m.name} vuole entrare nel tuo mondo`,
+        body: "In gioco premi Esc → Apri in LAN → Avvia mondo LAN: entrerà da solo.",
+        avatarUuid: m.from,
+      });
+      return;
+    }
     const target: ChatTarget =
       m.kind === "group" ? { kind: "group", id: m.groupId ?? 0, name: m.groupName || "Gruppo" } : { kind: "direct", uuid: m.from, name: m.name };
     // già nella chat giusta: il messaggio compare lì, niente notifica
@@ -276,7 +319,42 @@ export const useApp = create<AppStore>((set, get) => ({
   },
   dismissNotice: (id) => set((s) => ({ notices: s.notices.filter((x) => x.id !== id) })),
 
-  launch: async (id) => {
+  pendingJoins: {},
+  joinFriend: async (friend) => {
+    const { snack, launch, notify } = get();
+    try {
+      if (friend.joinAddress) {
+        set((s) => {
+          const pendingJoins = { ...s.pendingJoins };
+          delete pendingJoins[friend.uuid];
+          return { pendingJoins };
+        });
+        const id = await instanceFor(friend.mcVersion);
+        notify({ title: `Entri da ${friend.name}`, body: `Avvio di Minecraft ${friend.mcVersion ?? ""} in corso…`, avatarUuid: friend.uuid });
+        await launch(id, friend.joinAddress);
+        return;
+      }
+      // in singleplayer: gli chiediamo di aprire il mondo; entriamo appena lo fa
+      await api.requestJoin(friend.uuid);
+      set((s) => ({ pendingJoins: { ...s.pendingJoins, [friend.uuid]: Date.now() } }));
+      snack(`Richiesta inviata a ${friend.name}: entri appena apre il mondo in LAN`, "success");
+      if (!joinPoll) {
+        joinPoll = setInterval(() => {
+          const pending = Object.entries(get().pendingJoins).filter(([, t]) => Date.now() - t < JOIN_WAIT_MS);
+          if (!pending.length) {
+            clearInterval(joinPoll!);
+            joinPoll = null;
+            set({ pendingJoins: {} });
+            return;
+          }
+          get().refreshFriends();
+        }, 5000);
+      }
+    } catch (e) {
+      snack(errorMessage(e), "error");
+    }
+  },
+  launch: async (id, join) => {
     const { snack, setLogFilter, toggleConsole } = get();
     if (!get().accounts.length) {
       snack("Aggiungi un account prima di giocare", "error", {
@@ -288,7 +366,7 @@ export const useApp = create<AppStore>((set, get) => ({
     setLogFilter(id);
     toggleConsole(true);
     try {
-      const pid = await api.launchInstance(id);
+      const pid = await api.launchInstance(id, join);
       get().setRunning(id, pid);
       get().refreshInstances();
     } catch (e) {

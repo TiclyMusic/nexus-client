@@ -69,7 +69,7 @@ export interface AccountInfo {
   active: boolean;
 }
 
-export type FriendStatus = "online" | "playing" | "hosting" | "offline";
+export type FriendStatus = "online" | "playing" | "hosting" | "server" | "offline";
 
 export interface FriendPresence {
   uuid: string;
@@ -79,6 +79,8 @@ export interface FriendPresence {
   status: FriendStatus;
   detail: string;
   joinAddress: string;
+  /** Versione di Minecraft che sta usando (per entrare con la stessa). */
+  mcVersion?: string;
   /** Messaggi di chat non letti da questo amico. */
   unread?: number;
 }
@@ -143,7 +145,8 @@ export interface GroupMessage {
 
 /** Messaggio appena ricevuto, per le notifiche. */
 export interface InboxMessage {
-  kind: "direct" | "group";
+  /** "join" = un amico chiede di entrare nel tuo mondo. */
+  kind: "direct" | "group" | "join";
   id: number;
   groupId?: number | null;
   groupName?: string | null;

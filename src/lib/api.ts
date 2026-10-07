@@ -68,7 +68,8 @@ export const api = {
   deleteInstance: (id: string) => invoke<void>("delete_instance", { id }),
   openInstanceFolder: (id: string) => invoke<void>("open_instance_folder", { id }),
   installInstance: (id: string, verify = false) => invoke<Instance>("install_instance", { id, verify }),
-  launchInstance: (id: string) => invoke<number>("launch_instance", { id }),
+  /** `join`: indirizzo di un server/mondo in cui entrare subito all'avvio. */
+  launchInstance: (id: string, join?: string) => invoke<number>("launch_instance", { id, join: join ?? null }),
   killInstance: (id: string) => invoke<void>("kill_instance", { id }),
   runningInstances: () => invoke<Record<string, number>>("running_instances"),
 
@@ -119,6 +120,7 @@ export const api = {
   setFriendFavorite: (uuid: string, favorite: boolean) =>
     invoke<void>("set_friend_favorite", { uuid, favorite }),
   getChatMessages: (uuid: string, after?: number) => invoke<DirectMessage[]>("get_chat_messages", { uuid, after: after ?? 0 }),
+  requestJoin: (uuid: string) => invoke<void>("request_join", { uuid }),
   sendChatMessage: (uuid: string, text: string) => invoke<DirectMessage>("send_chat_message", { uuid, text }),
 
   // Gruppi

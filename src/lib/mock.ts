@@ -220,6 +220,8 @@ export async function mockInvoke<T>(cmd: string, args?: Record<string, unknown>)
         (mockChats[uuid] ??= []).push(msg);
         return msg;
       }
+      case "request_join":
+        return null;
       case "get_tunnel_status":
         return null;
       case "get_groups":

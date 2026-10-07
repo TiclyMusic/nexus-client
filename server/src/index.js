@@ -226,8 +226,15 @@ async function handleFavorite(req, env, me) {
 // POST /presence { status, detail, joinAddress }
 async function handlePresence(req, env, me) {
   const body = await req.json().catch(() => ({}));
-  await env.DB.prepare(`UPDATE users SET last_seen = ?, presence = ?, detail = ?, join_address = ? WHERE uuid = ?`)
-    .bind(now(), String(body.status || "online").slice(0, 20), String(body.detail || "").slice(0, 120), String(body.joinAddress || "").slice(0, 120), me)
+  await env.DB.prepare(`UPDATE users SET last_seen = ?, presence = ?, detail = ?, join_address = ?, mc_version = ? WHERE uuid = ?`)
+    .bind(
+      now(),
+      String(body.status || "online").slice(0, 20),
+      String(body.detail || "").slice(0, 120),
+      String(body.joinAddress || "").slice(0, 120),
+      String(body.mcVersion || "").slice(0, 32),
+      me,
+    )
     .run();
   // Totale dei messaggi non letti: il launcher lo mostra come badge senza richieste in più.
   return json({ status: "ok", unread: await unreadTotal(env, me) });
@@ -499,10 +506,12 @@ async function handleInbox(req, env, me) {
   const url = new URL(req.url);
   const dm = parseInt(url.searchParams.get("dm") ?? "-1", 10);
   const gm = parseInt(url.searchParams.get("gm") ?? "-1", 10);
+  const jr = parseInt(url.searchParams.get("jr") ?? "0", 10) || 0;
   const max = await env.DB.prepare(
-    `SELECT (SELECT COALESCE(MAX(id), 0) FROM messages) AS dm, (SELECT COALESCE(MAX(id), 0) FROM group_messages) AS gm`,
+    `SELECT (SELECT COALESCE(MAX(id), 0) FROM messages) AS dm, (SELECT COALESCE(MAX(id), 0) FROM group_messages) AS gm,
+            (SELECT COALESCE(MAX(id), 0) FROM join_requests) AS jr`,
   ).first();
-  const cursor = { dm: max?.dm || 0, gm: max?.gm || 0 };
+  const cursor = { dm: max?.dm || 0, gm: max?.gm || 0, jr: max?.jr || 0 };
   if (!(dm >= 0) || !(gm >= 0)) return json({ cursor, messages: [], unread: await unreadTotal(env, me) });
 
   const direct = await env.DB.prepare(
@@ -519,7 +528,14 @@ async function handleInbox(req, env, me) {
   )
     .bind(me, gm)
     .all();
+  const joins = await env.DB.prepare(
+    `SELECT j.id, j.from_uuid, j.created, u.name FROM join_requests j LEFT JOIN users u ON u.uuid = j.from_uuid
+     WHERE j.to_uuid = ? AND j.id > ? AND j.created > ? ORDER BY j.id ASC LIMIT 10`,
+  )
+    .bind(me, jr, Date.now() - JOIN_REQUEST_TTL)
+    .all();
   const messages = [
+    ...(joins.results || []).map((r) => ({ kind: "join", id: r.id, from: r.from_uuid, name: r.name || "", text: "", created: r.created })),
     ...(direct.results || []).map((r) => ({ kind: "direct", id: r.id, from: r.from_uuid, name: r.name || "", text: r.body, created: r.created })),
     ...(group.results || []).map((r) => ({
       kind: "group",
@@ -533,6 +549,28 @@ async function handleInbox(req, env, me) {
     })),
   ].sort((a, b) => a.created - b.created);
   return json({ cursor, messages, unread: await unreadTotal(env, me) });
+}
+
+// ---------------------------------------------------------------------------
+// Richieste di entrare nel mondo di un amico
+// ---------------------------------------------------------------------------
+
+const JOIN_REQUEST_TTL = 5 * 60_000; // ms
+
+// POST /join { to } — al massimo una richiesta ogni 30 secondi verso lo stesso amico.
+async function handleJoinRequest(req, env, me) {
+  const { to } = await req.json().catch(() => ({}));
+  const other = String(to || "").toLowerCase();
+  if (!other || !(await areFriends(env, me, other))) return json({ error: "Puoi chiedere di entrare solo ai tuoi amici" }, 403);
+  const t = Date.now();
+  const recent = await env.DB.prepare(`SELECT 1 FROM join_requests WHERE from_uuid = ? AND to_uuid = ? AND created > ?`)
+    .bind(me, other, t - 30_000)
+    .first();
+  if (!recent) {
+    await env.DB.prepare(`INSERT INTO join_requests (from_uuid, to_uuid, created) VALUES (?, ?, ?)`).bind(me, other, t).run();
+    if (Math.random() < 0.05) await env.DB.prepare(`DELETE FROM join_requests WHERE created < ?`).bind(t - JOIN_REQUEST_TTL).run();
+  }
+  return json({ status: "sent" });
 }
 
 // ---------------------------------------------------------------------------
@@ -561,7 +599,7 @@ async function handleStats(req, env, ctx) {
 async function handleFriends(env, me) {
   const t = now();
   const friendRows = await env.DB.prepare(
-    `SELECT u.uuid, u.name, f.favorite, u.last_seen, u.presence, u.detail, u.join_address
+    `SELECT u.uuid, u.name, f.favorite, u.last_seen, u.presence, u.detail, u.join_address, u.mc_version
      FROM friends f JOIN users u ON u.uuid = f.friend_uuid
      WHERE f.uuid = ? ORDER BY f.favorite DESC, u.name_lower`,
   )
@@ -583,6 +621,7 @@ async function handleFriends(env, me) {
       status: online ? r.presence || "online" : "offline",
       detail: online ? r.detail || "" : "",
       joinAddress: online ? r.join_address || "" : "",
+      mcVersion: online ? r.mc_version || "" : "",
       unread: unread[r.uuid] || 0,
     };
   });
@@ -636,6 +675,7 @@ export default {
       if (path === "/presence" && req.method === "POST") return await handlePresence(req, env, me);
       if (path === "/messages" && req.method === "GET") return await handleGetMessages(req, env, me);
       if (path === "/messages" && req.method === "POST") return await handleSendMessage(req, env, me);
+      if (path === "/join" && req.method === "POST") return await handleJoinRequest(req, env, me);
       if (path === "/inbox" && req.method === "GET") return await handleInbox(req, env, me);
       if (path === "/groups" && req.method === "GET") return await handleGroups(env, me);
       if (path === "/groups/create" && req.method === "POST") return await handleGroupCreate(req, env, me);

@@ -33,7 +33,9 @@ pub struct AppState {
     /// Token di sessione del server amici (cache).
     pub social_token: Mutex<Option<String>>,
     /// Ultimi id di messaggio (privati, di gruppo) già notificati.
-    pub inbox_cursor: Mutex<Option<(i64, i64)>>,
+    pub inbox_cursor: Mutex<Option<(i64, i64, i64)>>,
+    /// Cosa sta facendo il giocatore in ogni istanza avviata (dal log del gioco).
+    pub activity: StdMutex<HashMap<String, crate::tunnel::Activity>>,
 }
 
 impl AppState {
@@ -53,6 +55,7 @@ impl AppState {
             local_ai: Mutex::new(Default::default()),
             social_token: Mutex::new(None),
             inbox_cursor: Mutex::new(None),
+            activity: StdMutex::new(HashMap::new()),
             paths,
         }
     }

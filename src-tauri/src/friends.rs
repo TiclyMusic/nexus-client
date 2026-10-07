@@ -6,7 +6,8 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
+use tauri_plugin_notification::NotificationExt;
 
 use crate::{
     auth,
@@ -25,6 +26,9 @@ pub struct FriendPresence {
     pub status: String,
     pub detail: String,
     pub join_address: String,
+    /// Versione di Minecraft dell'istanza che sta usando (per entrare con la stessa).
+    #[serde(default)]
+    pub mc_version: String,
     /// Messaggi di chat non ancora letti da questo amico.
     #[serde(default)]
     pub unread: u32,
@@ -78,7 +82,7 @@ pub struct GroupMessage {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InboxMessage {
-    /// "direct" | "group"
+    /// "direct" | "group" | "join" (richiesta di entrare nel mondo)
     pub kind: String,
     pub id: i64,
     #[serde(default)]
@@ -226,22 +230,49 @@ async fn call(
 // ---------------------------------------------------------------------------
 
 /// Calcola la presenza corrente dallo stato del launcher (istanze in esecuzione, tunnel host).
-pub async fn current_presence(state: &AppState) -> (String, String, String) {
+/// Presenza da inviare al server: stato, descrizione, indirizzo per entrare e versione del gioco.
+pub struct Presence {
+    pub status: String,
+    pub detail: String,
+    pub join_address: String,
+    pub mc_version: String,
+}
+
+pub async fn current_presence(state: &AppState) -> Presence {
+    use crate::tunnel::{is_private_address, Activity};
+    let presence = |status: &str, detail: String, join_address: String, mc_version: String| Presence {
+        status: status.into(),
+        detail,
+        join_address,
+        mc_version,
+    };
     // Mondo aperto agli amici? (tunnel aperto in automatico da "Apri in LAN")
     let hosting = state.active_tunnel.lock().await.as_ref().map(|t| (t.instance_id.clone(), t.public_address.clone()));
     if let Some((id, address)) = hosting {
-        let name = crate::instances::load(state, &id).await.map(|i| i.name).unwrap_or(id);
-        return ("hosting".into(), format!("Ha aperto un mondo · {name}"), address);
+        let (name, version) = crate::instances::load(state, &id).await.map(|i| (i.name, i.mc_version)).unwrap_or((id, String::new()));
+        return presence("hosting", format!("Ha aperto un mondo · {name}"), address, version);
     }
     // Istanza in esecuzione?
     let running_id = state.running.lock().unwrap().keys().next().cloned();
     if let Some(id) = running_id {
-        match crate::instances::load(state, &id).await {
-            Ok(i) => return ("playing".into(), format!("{} · {}", i.name, i.mc_version), String::new()),
-            Err(_) => return ("playing".into(), "In gioco".into(), String::new()),
-        }
+        let (name, version) = crate::instances::load(state, &id)
+            .await
+            .map(|i| (i.name, i.mc_version))
+            .unwrap_or(("In gioco".into(), String::new()));
+        let activity = state.activity.lock().unwrap().get(&id).cloned();
+        return match activity {
+            Some(Activity::Server(address)) if address.starts_with("bore.pub") => {
+                presence("server", format!("Nel mondo di un amico · {version}"), address, version)
+            }
+            Some(Activity::Server(address)) if is_private_address(&address) => {
+                presence("server", format!("Su un server in rete locale · {version}"), String::new(), version)
+            }
+            Some(Activity::Server(address)) => presence("server", format!("Su {address} · {version}"), address, version),
+            Some(Activity::Singleplayer) => presence("playing", format!("In singleplayer · {name} · {version}"), String::new(), version),
+            None => presence("playing", format!("{name} · {version}"), String::new(), version),
+        };
     }
-    ("online".into(), String::new(), String::new())
+    presence("online", String::new(), String::new(), String::new())
 }
 
 /// Invia un heartbeat di presenza. Silenzioso: gli errori non devono disturbare l'utente.
@@ -249,12 +280,12 @@ pub async fn heartbeat(app: &AppHandle, state: &AppState) {
     if base_url(&state.settings.read().await.social_url).is_err() {
         return;
     }
-    let (status, detail, join_address) = current_presence(state).await;
+    let p = current_presence(state).await;
     let reply = call(
         state,
         reqwest::Method::POST,
         "/presence",
-        Some(json!({ "status": status, "detail": detail, "joinAddress": join_address })),
+        Some(json!({ "status": p.status, "detail": p.detail, "joinAddress": p.join_address, "mcVersion": p.mc_version })),
     )
     .await;
     // Il server risponde con il totale dei messaggi non letti: lo passiamo all'interfaccia.
@@ -274,7 +305,7 @@ pub async fn poll_inbox(app: &AppHandle, state: &AppState) {
     }
     let cursor = *state.inbox_cursor.lock().await;
     let path = match cursor {
-        Some((dm, gm)) => format!("/inbox?dm={dm}&gm={gm}"),
+        Some((dm, gm, jr)) => format!("/inbox?dm={dm}&gm={gm}&jr={jr}"),
         None => "/inbox".to_string(),
     };
     let Ok(value) = call(state, reqwest::Method::GET, &path, None).await else {
@@ -283,11 +314,27 @@ pub async fn poll_inbox(app: &AppHandle, state: &AppState) {
     let next = (
         value["cursor"]["dm"].as_i64().unwrap_or(0),
         value["cursor"]["gm"].as_i64().unwrap_or(0),
+        value["cursor"]["jr"].as_i64().unwrap_or(0),
     );
     let messages: Vec<InboxMessage> = serde_json::from_value(value["messages"].clone()).unwrap_or_default();
     // se arrivano più di 20 messaggi in pochi secondi notifichiamo solo i primi: il badge li conta comunque
     *state.inbox_cursor.lock().await = Some(next);
+    // Notifica di sistema quando il launcher non è in primo piano (di solito si è in gioco):
+    // sempre per le richieste di entrare, per la chat solo se la finestra non ha il focus.
+    let focused = app.get_webview_window("main").and_then(|w| w.is_focused().ok()).unwrap_or(false);
     for m in messages {
+        let system = match m.kind.as_str() {
+            "join" => Some((
+                format!("{} vuole entrare nel tuo mondo", m.name),
+                "Per farlo entrare: Esc → Apri in LAN → Avvia mondo LAN. Al resto pensa Nexus.".to_string(),
+            )),
+            "group" if !focused => Some((format!("{} · {}", m.name, m.group_name.clone().unwrap_or_default()), m.text.clone())),
+            "direct" if !focused => Some((m.name.clone(), m.text.clone())),
+            _ => None,
+        };
+        if let Some((title, body)) = system {
+            let _ = app.notification().builder().title(title).body(body).show();
+        }
         let _ = app.emit("social-message", m);
     }
     if let Some(n) = value["unread"].as_u64() {
@@ -399,6 +446,14 @@ pub async fn remove_friend(state: State<'_, AppState>, uuid: String) -> Result<(
 #[tauri::command]
 pub async fn set_friend_favorite(state: State<'_, AppState>, uuid: String, favorite: bool) -> Result<()> {
     call(state.inner(), reqwest::Method::POST, "/favorite", Some(json!({ "uuid": uuid, "favorite": favorite }))).await?;
+    Ok(())
+}
+
+/// Chiede a un amico in singleplayer di entrare nel suo mondo: gli arriva una notifica e,
+/// quando apre il mondo in LAN, il tunnel parte da solo e chi ha chiesto entra.
+#[tauri::command]
+pub async fn request_join(state: State<'_, AppState>, uuid: String) -> Result<()> {
+    call(state.inner(), reqwest::Method::POST, "/join", Some(json!({ "to": uuid }))).await?;
     Ok(())
 }
 

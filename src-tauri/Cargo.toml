@@ -1,6 +1,6 @@
 [package]
 name = "nexus-launcher"
-version = "0.4.0"
+version = "0.4.1"
 description = "Nexus Launcher — launcher Minecraft open-source"
 authors = ["Nexus Launcher contributors"]
 license = "GPL-3.0-or-later"
@@ -42,6 +42,7 @@ sysinfo = { version = "0.33", default-features = false, features = ["system"] }
 log = "0.4"
 bore-cli = "0.6.0"
 png = "0.18.1"
+tauri-plugin-notification = "2"
 
 [profile.release]
 codegen-units = 1
