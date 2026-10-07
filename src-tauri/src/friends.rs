@@ -322,12 +322,17 @@ pub async fn poll_inbox(app: &AppHandle, state: &AppState) {
     // Notifica di sistema quando il launcher non è in primo piano (di solito si è in gioco):
     // sempre per le richieste di entrare, per la chat solo se la finestra non ha il focus.
     let focused = app.get_webview_window("main").and_then(|w| w.is_focused().ok()).unwrap_or(false);
+    // con la mod in gioco gli avvisi compaiono dentro Minecraft: niente notifica di Windows
+    let in_game_menu = !state.running.lock().unwrap().is_empty() && state.bridge.get().is_some();
     for m in messages {
+        crate::bridge::push_event(state, &m);
         let system = match m.kind.as_str() {
+            _ if in_game_menu && m.kind != "direct" && m.kind != "group" => None,
             "join" => Some((
                 format!("{} vuole entrare nel tuo mondo", m.name),
                 "Per farlo entrare: Esc → Apri in LAN → Avvia mondo LAN. Al resto pensa Nexus.".to_string(),
             )),
+            "invite" => Some((format!("{} ti invita nel suo mondo", m.name), "Apri Nexus e premi Entra.".to_string())),
             "group" if !focused => Some((format!("{} · {}", m.name, m.group_name.clone().unwrap_or_default()), m.text.clone())),
             "direct" if !focused => Some((m.name.clone(), m.text.clone())),
             _ => None,
@@ -453,8 +458,29 @@ pub async fn set_friend_favorite(state: State<'_, AppState>, uuid: String, favor
 /// quando apre il mondo in LAN, il tunnel parte da solo e chi ha chiesto entra.
 #[tauri::command]
 pub async fn request_join(state: State<'_, AppState>, uuid: String) -> Result<()> {
-    call(state.inner(), reqwest::Method::POST, "/join", Some(json!({ "to": uuid }))).await?;
+    request_join_inner(state.inner(), &uuid).await
+}
+
+pub async fn request_join_inner(state: &AppState, uuid: &str) -> Result<()> {
+    call(state, reqwest::Method::POST, "/join", Some(json!({ "to": uuid }))).await?;
     Ok(())
+}
+
+/// Invita un amico nel mondo che stai ospitando.
+pub async fn invite_inner(state: &AppState, uuid: &str) -> Result<()> {
+    call(state, reqwest::Method::POST, "/invite", Some(json!({ "to": uuid }))).await?;
+    Ok(())
+}
+
+pub async fn send_message_inner(state: &AppState, uuid: &str, text: &str) -> Result<()> {
+    call(state, reqwest::Method::POST, "/messages", Some(json!({ "to": uuid, "text": text }))).await?;
+    Ok(())
+}
+
+/// Lista amici con presenza (per la mod in gioco).
+pub async fn fetch_friends(state: &AppState) -> Result<Vec<FriendPresence>> {
+    let value = call(state, reqwest::Method::GET, "/friends", None).await?;
+    Ok(serde_json::from_value(value["friends"].clone()).unwrap_or_default())
 }
 
 /// Messaggi con un amico: gli ultimi 50, oppure solo quelli con id > `after` (per l'aggiornamento).

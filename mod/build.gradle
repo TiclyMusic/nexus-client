@@ -1,0 +1,40 @@
+// Nexus Companion: mod client installata dal launcher (menu amici in gioco, entra/invita con un clic).
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+
+base { archivesName = 'nexus-companion' }
+
+// `gradlew runClient`: Minecraft di sviluppo con dati finti e screenshot automatici (SelfTest)
+loom {
+	runs {
+		client {
+			vmArg "-Dnexus.selftest=true"
+			programArgs "--width", "1280", "--height", "720"
+		}
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// I moduli di Fabric API usati viaggiano dentro il jar: funziona anche senza Fabric API installata.
+	["fabric-api-base", "fabric-key-mapping-api-v1", "fabric-screen-api-v1", "fabric-lifecycle-events-v1"].each {
+		include fabricApi.module(it, project.fabric_api_version)
+	}
+}
+
+processResources {
+	def version = project.version
+	inputs.property "version", version
+	filesMatching("fabric.mod.json") { expand "version": version }
+}
+
+tasks.withType(JavaCompile).configureEach { it.options.release = 25 }
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}

@@ -192,8 +192,9 @@ export const useApp = create<AppStore>((set, get) => ({
     try {
       const friends = await api.getFriends();
       set({ friends, unreadTotal: countUnread(friends, get().groups) });
-      // chi aspettavamo ha aperto il mondo: entriamo
-      for (const f of friends.friends) {
+      // chi aspettavamo ha aperto il mondo: entriamo (se il gioco è già aperto ci pensa la mod in gioco)
+      const gameOpen = Object.keys(get().running).length > 0;
+      for (const f of gameOpen ? [] : friends.friends) {
         const asked = get().pendingJoins[f.uuid];
         if (asked && Date.now() - asked < JOIN_WAIT_MS && f.joinAddress) get().joinFriend(f);
       }
@@ -221,6 +222,23 @@ export const useApp = create<AppStore>((set, get) => ({
   },
   onInboxMessage: (m) => {
     const { chat, notify, openChat } = get();
+    if (m.kind === "invite") {
+      notify({
+        title: `${m.name} ti invita nel suo mondo`,
+        body: "Entri con la stessa versione di Minecraft.",
+        avatarUuid: m.from,
+        action: {
+          label: "Entra",
+          run: async () => {
+            await get().refreshFriends();
+            const host = get().friends.friends.find((f) => f.uuid === m.from);
+            if (host?.joinAddress) get().joinFriend(host);
+            else get().snack(`Il mondo di ${m.name} si sta ancora aprendo: riprova tra qualche secondo`, "info");
+          },
+        },
+      });
+      return;
+    }
     if (m.kind === "join") {
       notify({
         title: `${m.name} vuole entrare nel tuo mondo`,

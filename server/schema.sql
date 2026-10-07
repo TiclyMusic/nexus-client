@@ -67,11 +67,13 @@ CREATE TABLE IF NOT EXISTS group_messages (
 );
 CREATE INDEX IF NOT EXISTS idx_group_messages_group ON group_messages(group_id, id);
 
--- Richieste "fammi entrare nel tuo mondo" (consegnate dall'/inbox, valide pochi minuti).
+-- Richieste "fammi entrare nel tuo mondo" (kind = 'join') e inviti nel proprio mondo
+-- (kind = 'invite'), consegnati dall'/inbox e validi pochi minuti.
 CREATE TABLE IF NOT EXISTS join_requests (
   id        INTEGER PRIMARY KEY AUTOINCREMENT,
   from_uuid TEXT NOT NULL,
   to_uuid   TEXT NOT NULL,
-  created   INTEGER NOT NULL
+  created   INTEGER NOT NULL,
+  kind      TEXT DEFAULT 'join'
 );
 CREATE INDEX IF NOT EXISTS idx_join_requests_to ON join_requests(to_uuid, id);

@@ -1,0 +1,19 @@
+{
+	"schemaVersion": 1,
+	"id": "nexus",
+	"version": "${version}",
+	"name": "Nexus Companion",
+	"description": "Menu amici in gioco di Nexus Launcher: entra nei mondi degli amici e invitali con un clic.",
+	"authors": ["Matthias Peterlini"],
+	"contact": { "homepage": "https://nexusmc.online", "sources": "https://github.com/TiclyMusic/nexus-client" },
+	"license": "GPL-3.0-or-later",
+	"environment": "client",
+	"entrypoints": {
+		"client": ["online.nexusmc.companion.NexusClient"]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.0",
+		"minecraft": "~26.3",
+		"java": ">=25"
+	}
+}

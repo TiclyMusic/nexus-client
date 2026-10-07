@@ -328,6 +328,10 @@ pub async fn launch(app: &AppHandle, state: &AppState, id: &str, join: Option<&s
     state.logs.lock().unwrap().remove(id);
 
     let account = auth::launch_account(state).await?;
+    // menu amici in gioco (Fabric + mod Nexus Companion sulle versioni supportate)
+    if let Err(e) = crate::companion::ensure(state, &mut instance).await {
+        emit_log(app, id, "launcher", &format!("Menu amici in gioco non disponibile: {e}"));
+    }
     let (prepared, java) = prepare(app, state, &mut instance, false).await?;
 
     let natives_dir = state.paths.natives(id);
@@ -341,10 +345,13 @@ pub async fn launch(app: &AppHandle, state: &AppState, id: &str, join: Option<&s
     if let Some(address) = join.filter(|a| !a.trim().is_empty()) {
         args.extend(join_args(&prepared.version, address));
     }
+    if let Some(bridge) = crate::bridge::jvm_arg(state) {
+        args.insert(0, bridge); // proprietà JVM: prima della main class
+    }
 
     let shown = args
         .iter()
-        .map(|a| a.replace(&account.mc_access_token, "••••"))
+        .map(|a| if a.starts_with("-Dnexus.bridge=") { "-Dnexus.bridge=••••".into() } else { a.replace(&account.mc_access_token, "••••") })
         .collect::<Vec<_>>()
         .join(" ");
     emit_log(app, id, "launcher", &format!("Avvio: {} {}", java.display(), shown));

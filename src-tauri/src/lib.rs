@@ -3,6 +3,8 @@
 mod ai;
 mod ai_local;
 mod auth;
+mod bridge;
+mod companion;
 mod crash;
 mod download;
 mod error;
@@ -56,6 +58,9 @@ pub fn run() {
                 let state = handle.state::<AppState>();
                 auth::refresh_active_on_startup(&state).await;
             });
+
+            // Ponte locale per la mod Nexus Companion in gioco.
+            tauri::async_runtime::spawn(bridge::start(app.handle().clone()));
 
             // Heartbeat di presenza per il tab Amici (ogni 30s, se il server è configurato).
             let hb = app.handle().clone();

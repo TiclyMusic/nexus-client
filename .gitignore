@@ -27,3 +27,8 @@ site/*.zip
 
 # variabili locali di wrangler dev (segreti)
 .dev.vars
+
+# mod Nexus Companion: output di Gradle e Minecraft di sviluppo
+mod/.gradle/
+mod/build/
+mod/run/

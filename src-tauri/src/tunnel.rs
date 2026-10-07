@@ -52,7 +52,9 @@ impl ActiveTunnel {
 /// (vecchie); la chat riporta "Local game hosted on port 51234" nella lingua del gioco.
 pub fn lan_port_from_log(line: &str) -> Option<u16> {
     // solo righe del server integrato o della chat: un mod che apre una sua porta non va esposto
-    let server = line.contains("Server thread") && (line.contains("Started serving on") || line.contains("Started on "));
+    // 26.x: "[Render thread/INFO]: Published LAN server on port 51234" (IntegratedServer.publishServer)
+    let published = line.contains("Published LAN server on port");
+    let server = published || (line.contains("Server thread") && (line.contains("Started serving on") || line.contains("Started on ")));
     let chat = line.contains("[CHAT]") && (line.contains("hosted on port") || line.contains("ospitata sulla porta"));
     if !(server || chat) {
         return None;
@@ -121,7 +123,7 @@ fn set_activity(app: &AppHandle, instance_id: &str, activity: Option<Activity>) 
 
 /// Il server integrato si ferma quando il giocatore esce dal mondo.
 pub fn lan_closed_from_log(line: &str) -> bool {
-    line.contains("Stopping server")
+    line.contains("Stopping server") || line.contains("Unpublishing integrated server")
 }
 
 async fn open(app: &AppHandle, state: &AppState, instance_id: &str, port: u16) -> Result<TunnelInfo> {
@@ -234,6 +236,8 @@ mod tests {
         assert_eq!(lan_port_from_log("[CHAT] Partita locale ospitata sulla porta 50000"), Some(50000));
         assert_eq!(lan_port_from_log("[Server thread/INFO]: Preparing spawn area: 83%"), None);
         assert!(lan_closed_from_log("[Server thread/INFO]: Stopping server"));
+        assert_eq!(lan_port_from_log("[19:02:11] [Render thread/INFO]: Published LAN server on port 50432"), Some(50432));
+        assert!(lan_closed_from_log("[Render thread/INFO]: Unpublishing integrated server (was on port 50432)"));
         assert_eq!(server_from_log("[18:30:01] [Render thread/INFO]: Connecting to mc.hypixel.net, 25565"), Some("mc.hypixel.net".into()));
         assert_eq!(server_from_log("[Render thread/INFO]: Connecting to bore.pub, 41234"), Some("bore.pub:41234".into()));
         assert!(is_private_address("192.168.1.20:25565") && is_private_address("localhost") && !is_private_address("bore.pub:4123"));

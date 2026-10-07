@@ -146,7 +146,7 @@ export interface GroupMessage {
 /** Messaggio appena ricevuto, per le notifiche. */
 export interface InboxMessage {
   /** "join" = un amico chiede di entrare nel tuo mondo. */
-  kind: "direct" | "group" | "join";
+  kind: "direct" | "group" | "join" | "invite";
   id: number;
   groupId?: number | null;
   groupName?: string | null;

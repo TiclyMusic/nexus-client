@@ -529,13 +529,13 @@ async function handleInbox(req, env, me) {
     .bind(me, gm)
     .all();
   const joins = await env.DB.prepare(
-    `SELECT j.id, j.from_uuid, j.created, u.name FROM join_requests j LEFT JOIN users u ON u.uuid = j.from_uuid
+    `SELECT j.id, j.from_uuid, j.created, j.kind, u.name FROM join_requests j LEFT JOIN users u ON u.uuid = j.from_uuid
      WHERE j.to_uuid = ? AND j.id > ? AND j.created > ? ORDER BY j.id ASC LIMIT 10`,
   )
     .bind(me, jr, Date.now() - JOIN_REQUEST_TTL)
     .all();
   const messages = [
-    ...(joins.results || []).map((r) => ({ kind: "join", id: r.id, from: r.from_uuid, name: r.name || "", text: "", created: r.created })),
+    ...(joins.results || []).map((r) => ({ kind: r.kind === "invite" ? "invite" : "join", id: r.id, from: r.from_uuid, name: r.name || "", text: "", created: r.created })),
     ...(direct.results || []).map((r) => ({ kind: "direct", id: r.id, from: r.from_uuid, name: r.name || "", text: r.body, created: r.created })),
     ...(group.results || []).map((r) => ({
       kind: "group",
@@ -557,17 +557,18 @@ async function handleInbox(req, env, me) {
 
 const JOIN_REQUEST_TTL = 5 * 60_000; // ms
 
-// POST /join { to } — al massimo una richiesta ogni 30 secondi verso lo stesso amico.
-async function handleJoinRequest(req, env, me) {
+// POST /join { to } (kind "join") e POST /invite { to } (kind "invite"): al massimo una
+// richiesta dello stesso tipo ogni 30 secondi verso lo stesso amico.
+async function handleJoinRequest(req, env, me, kind = "join") {
   const { to } = await req.json().catch(() => ({}));
   const other = String(to || "").toLowerCase();
   if (!other || !(await areFriends(env, me, other))) return json({ error: "Puoi chiedere di entrare solo ai tuoi amici" }, 403);
   const t = Date.now();
-  const recent = await env.DB.prepare(`SELECT 1 FROM join_requests WHERE from_uuid = ? AND to_uuid = ? AND created > ?`)
-    .bind(me, other, t - 30_000)
+  const recent = await env.DB.prepare(`SELECT 1 FROM join_requests WHERE from_uuid = ? AND to_uuid = ? AND kind = ? AND created > ?`)
+    .bind(me, other, kind, t - 30_000)
     .first();
   if (!recent) {
-    await env.DB.prepare(`INSERT INTO join_requests (from_uuid, to_uuid, created) VALUES (?, ?, ?)`).bind(me, other, t).run();
+    await env.DB.prepare(`INSERT INTO join_requests (from_uuid, to_uuid, created, kind) VALUES (?, ?, ?, ?)`).bind(me, other, t, kind).run();
     if (Math.random() < 0.05) await env.DB.prepare(`DELETE FROM join_requests WHERE created < ?`).bind(t - JOIN_REQUEST_TTL).run();
   }
   return json({ status: "sent" });
@@ -676,6 +677,7 @@ export default {
       if (path === "/messages" && req.method === "GET") return await handleGetMessages(req, env, me);
       if (path === "/messages" && req.method === "POST") return await handleSendMessage(req, env, me);
       if (path === "/join" && req.method === "POST") return await handleJoinRequest(req, env, me);
+      if (path === "/invite" && req.method === "POST") return await handleJoinRequest(req, env, me, "invite");
       if (path === "/inbox" && req.method === "GET") return await handleInbox(req, env, me);
       if (path === "/groups" && req.method === "GET") return await handleGroups(env, me);
       if (path === "/groups/create" && req.method === "POST") return await handleGroupCreate(req, env, me);

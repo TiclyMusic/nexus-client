@@ -36,6 +36,12 @@ pub struct AppState {
     pub inbox_cursor: Mutex<Option<(i64, i64, i64)>>,
     /// Cosa sta facendo il giocatore in ogni istanza avviata (dal log del gioco).
     pub activity: StdMutex<HashMap<String, crate::tunnel::Activity>>,
+    /// Ponte locale per la mod in gioco: (porta, token).
+    pub bridge: std::sync::OnceLock<(u16, String)>,
+    /// Eventi recenti per la mod (richieste, inviti, messaggi), con numero progressivo.
+    pub bridge_events: StdMutex<VecDeque<serde_json::Value>>,
+    /// Amici in cache per le richieste frequenti della mod.
+    pub bridge_friends: Mutex<Option<(std::time::Instant, Vec<crate::friends::FriendPresence>)>>,
 }
 
 impl AppState {
@@ -56,6 +62,9 @@ impl AppState {
             social_token: Mutex::new(None),
             inbox_cursor: Mutex::new(None),
             activity: StdMutex::new(HashMap::new()),
+            bridge: std::sync::OnceLock::new(),
+            bridge_events: StdMutex::new(VecDeque::new()),
+            bridge_friends: Mutex::new(None),
             paths,
         }
     }
