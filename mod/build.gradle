@@ -1,9 +1,45 @@
 // Nexus Companion: mod client installata dal launcher (menu amici in gioco, entra/invita con un clic).
+//
+// Una build per versione di Minecraft:
+//   gradlew build -Pminecraft_version=26.2 -Pfabric_api_version=0.161.0+26.2
+// Il codice che usa le API di Minecraft sta in eras/<era>/java (vedi eras.json); src/main è comune.
+import groovy.json.JsonSlurper
+
 plugins {
-	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	id 'net.fabricmc.fabric-loom' version "${loom_version}" apply false
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}" apply false
 }
 
-base { archivesName = 'nexus-companion' }
+static int[] parseVersion(String v) {
+	return v.tokenize('.').collect { it.isInteger() ? it.toInteger() : 0 } as int[]
+}
+
+static int compareVersions(String a, String b) {
+	int[] x = parseVersion(a), y = parseVersion(b)
+	for (int i = 0; i < Math.max(x.length, y.length); i++) {
+		int d = (i < x.length ? x[i] : 0) <=> (i < y.length ? y[i] : 0)
+		if (d != 0) return d
+	}
+	return 0
+}
+
+def mc = project.minecraft_version
+def era = new JsonSlurper().parse(file('eras.json')).eras.find {
+	compareVersions(mc, it.min) >= 0 && (it.max == null || compareVersions(mc, it.max) <= 0)
+}
+if (era == null) throw new GradleException("Nessuna era della mod per Minecraft ${mc}: aggiungila in eras.json")
+// Java richiesto da Minecraft: 17 fino alla 1.20.4, 21 dalla 1.20.5, 25 dalla 26.1
+def javaVersion = era.java ?: (compareVersions(mc, '1.20.5') < 0 ? 17 : 21)
+ext.era = era
+
+apply plugin: era.obf ? 'net.fabricmc.fabric-loom-remap' : 'net.fabricmc.fabric-loom'
+
+base { archivesName = "nexus-companion-${mc}" }
+
+sourceSets.main {
+	java.srcDir "eras/${era.name}/java"
+	resources.srcDir "eras/${era.name}/resources"
+}
 
 // `gradlew runClient`: Minecraft di sviluppo con dati finti e screenshot automatici (SelfTest)
 loom {
@@ -15,26 +51,39 @@ loom {
 	}
 }
 
-dependencies {
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+def fabricModules = ["fabric-api-base", "fabric-key-binding-api-v1", "fabric-key-mapping-api-v1", "fabric-screen-api-v1", "fabric-lifecycle-events-v1"]
 
+dependencies {
+	minecraft "com.mojang:minecraft:${mc}"
+	if (era.obf) {
+		mappings loom.officialMojangMappings()
+		modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+		modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	} else {
+		implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+		implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	}
 	// I moduli di Fabric API usati viaggiano dentro il jar: funziona anche senza Fabric API installata.
-	["fabric-api-base", "fabric-key-mapping-api-v1", "fabric-screen-api-v1", "fabric-lifecycle-events-v1"].each {
-		include fabricApi.module(it, project.fabric_api_version)
+	// (key-binding nelle versioni vecchie, key-mapping dalla 26.1: si include quello che esiste)
+	fabricModules.each { name ->
+		try {
+			include fabricApi.module(name, project.fabric_api_version)
+		} catch (Exception ignored) {
+		}
 	}
 }
 
 processResources {
 	def version = project.version
 	inputs.property "version", version
-	filesMatching("fabric.mod.json") { expand "version": version }
+	inputs.property "minecraft", mc
+	inputs.property "java", javaVersion
+	filesMatching("fabric.mod.json") { expand "version": version, "minecraft": mc, "java": javaVersion }
 }
 
-tasks.withType(JavaCompile).configureEach { it.options.release = 25 }
+tasks.withType(JavaCompile).configureEach { it.options.release = javaVersion }
 
 java {
-	sourceCompatibility = JavaVersion.VERSION_25
-	targetCompatibility = JavaVersion.VERSION_25
+	sourceCompatibility = JavaVersion.toVersion(javaVersion)
+	targetCompatibility = JavaVersion.toVersion(javaVersion)
 }

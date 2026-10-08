@@ -1,0 +1,200 @@
+# Bot della mod Nexus Companion: la compila per ogni versione di Minecraft supportata e
+# pubblica i jar nella release "companion" (con companion.json, l'indice letto dal launcher).
+#
+# - Ogni giorno controlla se è uscita una nuova versione di Minecraft (con la sua Fabric API)
+#   e la compila; quando cambia il codice in mod/ ricompila tutte le versioni.
+# - Se una versione non compila (Minecraft ha cambiato le sue API) apre una issue con l'errore;
+#   se è impostato il secret ANTHROPIC_API_KEY prova anche a portare la mod con Claude Code e
+#   apre una pull request da rivedere.
+# - "Actions → companion → Run workflow" con force=true ricompila tutto a mano.
+name: companion
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Ricompila tutte le versioni"
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths: ["mod/**", ".github/workflows/companion.yml"]
+
+concurrency: companion
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      count: ${{ steps.plan.outputs.count }}
+      source: ${{ steps.hash.outputs.source }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: hash
+        # impronta del codice della mod: se cambia si ricompila tutto
+        run: echo "source=$(git rev-parse HEAD:mod)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - id: plan
+        env:
+          SOURCE_HASH: ${{ steps.hash.outputs.source }}
+          REPO: ${{ github.repository }}
+          FORCE: ${{ inputs.force }}
+        run: node mod/ci/plan.mjs
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.count != '0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix: ${{ fromJson(needs.plan.outputs.matrix) }}
+    defaults:
+      run:
+        working-directory: mod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build ${{ matrix.mc }}
+        id: build
+        continue-on-error: true
+        run: |
+          chmod +x gradlew
+          ./gradlew build --no-daemon -Pminecraft_version=${{ matrix.mc }} -Pfabric_api_version=${{ matrix.fabric_api }} 2>&1 | tee build.log
+          exit "${PIPESTATUS[0]}"
+      - name: Raccogli il jar
+        if: steps.build.outcome == 'success'
+        run: |
+          mkdir -p out
+          cp build/libs/nexus-companion-${{ matrix.mc }}-*.jar "out/nexus-companion-${{ matrix.mc }}.jar"
+      - uses: actions/upload-artifact@v4
+        if: steps.build.outcome == 'success'
+        with:
+          name: jar-${{ matrix.mc }}
+          path: mod/out/*.jar
+          retention-days: 7
+      - name: Salva l'errore
+        if: steps.build.outcome != 'success'
+        run: |
+          mkdir -p failed
+          { echo "era: ${{ matrix.era }} · Fabric API ${{ matrix.fabric_api }}"; grep -E "error:|What went wrong" -A3 build.log | head -80; } > "failed/${{ matrix.mc }}.log"
+      - uses: actions/upload-artifact@v4
+        if: steps.build.outcome != 'success'
+        with:
+          name: failed-${{ matrix.mc }}
+          path: mod/failed/*.log
+          retention-days: 7
+
+  publish:
+    needs: [plan, build]
+    if: always() && needs.plan.outputs.count != '0'
+    runs-on: ubuntu-latest
+    outputs:
+      failed: ${{ steps.failed.outputs.list }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: jar-*
+          merge-multiple: true
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: failed-*
+          merge-multiple: true
+          path: failed
+      - name: companion.json
+        env:
+          SOURCE_HASH: ${{ needs.plan.outputs.source }}
+          REPO: ${{ github.repository }}
+        run: |
+          export MOD_VERSION=$(grep '^version=' mod/gradle.properties | cut -d= -f2)
+          node mod/ci/index.mjs
+      - name: Pubblica nella release "companion"
+        if: hashFiles('dist/*.jar') != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: companion
+          name: Nexus Companion (mod in gioco)
+          # non deve diventare "latest": l'aggiornamento del launcher usa l'ultima release
+          make_latest: false
+          body: |
+            Mod Fabric "Nexus Companion" per ogni versione di Minecraft supportata, compilata
+            automaticamente dal workflow companion. Il launcher la installa da solo: non serve
+            scaricarla a mano. Indice: companion.json.
+          files: dist/*
+      - id: failed
+        run: echo "list=$(ls failed 2>/dev/null | sed 's/\.log$//' | paste -sd, -)" >> "$GITHUB_OUTPUT"
+      - name: Issue per le versioni che non compilano
+        if: steps.failed.outputs.list != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+            for (const file of fs.readdirSync("failed")) {
+              const mc = file.replace(/\.log$/, "");
+              const title = `Nexus Companion non compila su Minecraft ${mc}`;
+              const body = "Il bot companion non è riuscito a compilare la mod per **" + mc + "** (probabilmente Minecraft ha cambiato le sue API).\n\n" +
+                "Per sistemarla: copia l'era più vicina in `mod/eras/`, aggiungila in `mod/eras.json` e correggi gli errori:\n\n```\n" +
+                fs.readFileSync(`failed/${file}`, "utf8").slice(0, 60000) + "\n```";
+              const open = await github.rest.search.issuesAndPullRequests({ q: `repo:${context.repo.owner}/${context.repo.repo} is:issue is:open in:title "${title}"` });
+              if (open.data.total_count === 0) {
+                await github.rest.issues.create({ ...context.repo, title, body, labels: ["companion"] }).catch(() =>
+                  github.rest.issues.create({ ...context.repo, title, body }));
+              }
+            }
+
+  # Facoltativo: con il secret ANTHROPIC_API_KEY, Claude Code prova a portare la mod sulle
+  # versioni fallite e apre una pull request (da rivedere: non viene mai unita da sola).
+  autofix:
+    needs: publish
+    if: needs.publish.outputs.failed != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - id: key
+        env:
+          KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: echo "present=$([ -n "$KEY" ] && echo yes || echo no)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        if: steps.key.outputs.present == 'yes'
+      - uses: actions/setup-java@v4
+        if: steps.key.outputs.present == 'yes'
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: anthropics/claude-code-action@v1
+        if: steps.key.outputs.present == 'yes'
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: "--max-turns 80 --allowedTools Bash,Read,Edit,Write,Glob,Grep"
+          prompt: |
+            La mod Fabric in mod/ (Nexus Companion) non compila per queste versioni di Minecraft: ${{ needs.publish.outputs.failed }}.
+            Il codice comune è in mod/src/main, quello che usa le API di Minecraft è diviso in ere in mod/eras/<era>/java,
+            con le versioni coperte in mod/eras.json. Per ogni versione fallita:
+            1. Trova la Fabric API adatta in https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml (versione che finisce con +<mc>).
+            2. Prova `cd mod && ./gradlew build -Pminecraft_version=<mc> -Pfabric_api_version=<api>`.
+            3. Se serve, crea una nuova era copiando quella più vicina e limita l'era vecchia in eras.json, poi correggi gli errori
+               leggendo i sorgenti di Minecraft (`./gradlew genSources` con le stesse proprietà).
+            4. Verifica che compilino ancora anche le versioni dell'era da cui sei partito.
+            Non cambiare il comportamento della mod né le altre ere. Alla fine crea un branch, fai commit e apri una pull request
+            verso main che spiega cosa è cambiato in Minecraft e cosa hai adattato.

@@ -54,7 +54,10 @@ pub fn lan_port_from_log(line: &str) -> Option<u16> {
     // solo righe del server integrato o della chat: un mod che apre una sua porta non va esposto
     // 26.x: "[Render thread/INFO]: Published LAN server on port 51234" (IntegratedServer.publishServer)
     let published = line.contains("Published LAN server on port");
-    let server = published || (line.contains("Server thread") && (line.contains("Started serving on") || line.contains("Started on ")));
+    // fino alla 26.1: "Started serving on 51234" (vecchie: "Started on"), dal Render thread quando
+    // lo apre il giocatore o dal Server thread con /publish
+    let thread = line.contains("Server thread") || line.contains("Render thread");
+    let server = published || (thread && (line.contains("Started serving on") || line.contains("Started on ")));
     let chat = line.contains("[CHAT]") && (line.contains("hosted on port") || line.contains("ospitata sulla porta"));
     if !(server || chat) {
         return None;
@@ -237,6 +240,8 @@ mod tests {
         assert_eq!(lan_port_from_log("[Server thread/INFO]: Preparing spawn area: 83%"), None);
         assert!(lan_closed_from_log("[Server thread/INFO]: Stopping server"));
         assert_eq!(lan_port_from_log("[19:02:11] [Render thread/INFO]: Published LAN server on port 50432"), Some(50432));
+        assert_eq!(lan_port_from_log("[19:02:11] [Render thread/INFO]: Started serving on 50433"), Some(50433));
+        assert_eq!(lan_port_from_log("[19:02:11] [Worker/INFO]: Started serving on 8080"), None);
         assert!(lan_closed_from_log("[Render thread/INFO]: Unpublishing integrated server (was on port 50432)"));
         assert_eq!(server_from_log("[18:30:01] [Render thread/INFO]: Connecting to mc.hypixel.net, 25565"), Some("mc.hypixel.net".into()));
         assert_eq!(server_from_log("[Render thread/INFO]: Connecting to bore.pub, 41234"), Some("bore.pub:41234".into()));
