@@ -223,15 +223,16 @@ async function handleFavorite(req, env, me) {
   return json({ status: "ok" });
 }
 
-// POST /presence { status, detail, joinAddress }
+// POST /presence { status, detail, joinAddress, joinDirect, mcVersion }
 async function handlePresence(req, env, me) {
   const body = await req.json().catch(() => ({}));
-  await env.DB.prepare(`UPDATE users SET last_seen = ?, presence = ?, detail = ?, join_address = ?, mc_version = ? WHERE uuid = ?`)
+  await env.DB.prepare(`UPDATE users SET last_seen = ?, presence = ?, detail = ?, join_address = ?, join_direct = ?, mc_version = ? WHERE uuid = ?`)
     .bind(
       now(),
       String(body.status || "online").slice(0, 20),
       String(body.detail || "").slice(0, 120),
       String(body.joinAddress || "").slice(0, 120),
+      String(body.joinDirect || "").slice(0, 200),
       String(body.mcVersion || "").slice(0, 32),
       me,
     )
@@ -600,7 +601,7 @@ async function handleStats(req, env, ctx) {
 async function handleFriends(env, me) {
   const t = now();
   const friendRows = await env.DB.prepare(
-    `SELECT u.uuid, u.name, f.favorite, u.last_seen, u.presence, u.detail, u.join_address, u.mc_version
+    `SELECT u.uuid, u.name, f.favorite, u.last_seen, u.presence, u.detail, u.join_address, u.join_direct, u.mc_version
      FROM friends f JOIN users u ON u.uuid = f.friend_uuid
      WHERE f.uuid = ? ORDER BY f.favorite DESC, u.name_lower`,
   )
@@ -622,6 +623,7 @@ async function handleFriends(env, me) {
       status: online ? r.presence || "online" : "offline",
       detail: online ? r.detail || "" : "",
       joinAddress: online ? r.join_address || "" : "",
+      joinDirect: online ? r.join_direct || "" : "",
       mcVersion: online ? r.mc_version || "" : "",
       unread: unread[r.uuid] || 0,
     };

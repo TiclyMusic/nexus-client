@@ -6,6 +6,7 @@ mod auth;
 mod bridge;
 mod companion;
 mod crash;
+mod direct;
 mod download;
 mod error;
 mod friends;

@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   presence     TEXT DEFAULT '',   -- online | playing | hosting
   detail       TEXT DEFAULT '',   -- es. "Survival Performance · 1.21 Fabric"
   join_address TEXT DEFAULT '',   -- indirizzo per unirsi se sta hostando o è su un server
+  join_direct  TEXT DEFAULT '',   -- indirizzi diretti di chi ospita (rete locale, UPnP), separati da spazi
   mc_version   TEXT DEFAULT ''    -- versione di Minecraft in uso
 );
 CREATE INDEX IF NOT EXISTS idx_users_name ON users(name_lower);

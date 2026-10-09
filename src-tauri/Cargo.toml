@@ -1,6 +1,6 @@
 [package]
 name = "nexus-launcher"
-version = "0.5.1"
+version = "0.5.2"
 description = "Nexus Launcher — launcher Minecraft open-source"
 authors = ["Nexus Launcher contributors"]
 license = "GPL-3.0-or-later"
@@ -45,6 +45,7 @@ png = "0.18.1"
 tauri-plugin-notification = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
+igd-next = { version = "0.17.1", features = ["aio_tokio"] }
 
 [profile.release]
 codegen-units = 1

@@ -31,6 +31,10 @@ pub struct ActiveTunnel {
     pub remote_port: u16,
     pub public_address: String,
     pub server_host: String,
+    /// Indirizzi per la connessione diretta (rete locale, porta aperta con UPnP), separati da
+    /// spazi: chi entra li prova prima del tunnel, che passa dagli USA ed è lento.
+    pub direct: String,
+    pub mapping: Option<crate::direct::Mapping>,
     pub cancel: oneshot::Sender<()>,
 }
 
@@ -136,8 +140,11 @@ async fn open(app: &AppHandle, state: &AppState, instance_id: &str, port: u16) -
             return Ok(active.info());
         }
     }
-    if let Some(old) = current.take() {
+    if let Some(mut old) = current.take() {
         let _ = old.cancel.send(());
+        if let Some(mapping) = old.mapping.take() {
+            tokio::spawn(crate::direct::close_mapping(mapping));
+        }
     }
 
     let client = bore_cli::client::Client::new("127.0.0.1", port, TUNNEL_SERVER, 0, None)
@@ -152,6 +159,8 @@ async fn open(app: &AppHandle, state: &AppState, instance_id: &str, port: u16) -
         remote_port,
         public_address: format!("{TUNNEL_SERVER}:{remote_port}"),
         server_host: TUNNEL_SERVER.to_string(),
+        direct: crate::direct::lan_candidate(port).unwrap_or_default(),
+        mapping: None,
         cancel: cancel_tx,
     };
     let info = active.info();
@@ -173,6 +182,24 @@ async fn open(app: &AppHandle, state: &AppState, instance_id: &str, port: u16) -
         let _ = handle.emit("tunnel-status", false);
     });
 
+    // porta aperta sul router (se il router lo permette): connessione diretta anche da fuori casa
+    let handle = app.clone();
+    tokio::spawn(async move {
+        let Some(mapping) = crate::direct::open_mapping(port).await else { return };
+        let state = handle.state::<AppState>();
+        let mut current = state.active_tunnel.lock().await;
+        match current.as_mut().filter(|t| t.remote_port == remote_port) {
+            Some(active) => {
+                active.direct = format!("{} {}", active.direct, mapping.address).trim().to_string();
+                active.mapping = Some(mapping);
+                drop(current);
+                crate::friends::heartbeat(&handle, &state).await;
+            }
+            // il mondo è già stato chiuso nel frattempo
+            None => crate::direct::close_mapping(mapping).await,
+        }
+    });
+
     let _ = app.emit("tunnel-status", true);
     Ok(info)
 }
@@ -183,8 +210,11 @@ async fn close(app: &AppHandle, state: &AppState, instance_id: Option<&str>) -> 
     if !matches {
         return false;
     }
-    if let Some(active) = current.take() {
+    if let Some(mut active) = current.take() {
         let _ = active.cancel.send(());
+        if let Some(mapping) = active.mapping.take() {
+            tokio::spawn(crate::direct::close_mapping(mapping));
+        }
     }
     let _ = app.emit("tunnel-status", false);
     true

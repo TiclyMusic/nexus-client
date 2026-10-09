@@ -26,6 +26,9 @@ pub struct FriendPresence {
     pub status: String,
     pub detail: String,
     pub join_address: String,
+    /// Indirizzi diretti di chi ospita (separati da spazi), provati prima del tunnel.
+    #[serde(default)]
+    pub join_direct: String,
     /// Versione di Minecraft dell'istanza che sta usando (per entrare con la stessa).
     #[serde(default)]
     pub mc_version: String,
@@ -235,6 +238,7 @@ pub struct Presence {
     pub status: String,
     pub detail: String,
     pub join_address: String,
+    pub join_direct: String,
     pub mc_version: String,
 }
 
@@ -244,13 +248,16 @@ pub async fn current_presence(state: &AppState) -> Presence {
         status: status.into(),
         detail,
         join_address,
+        join_direct: String::new(),
         mc_version,
     };
     // Mondo aperto agli amici? (tunnel aperto in automatico da "Apri in LAN")
-    let hosting = state.active_tunnel.lock().await.as_ref().map(|t| (t.instance_id.clone(), t.public_address.clone()));
-    if let Some((id, address)) = hosting {
+    let hosting = state.active_tunnel.lock().await.as_ref().map(|t| (t.instance_id.clone(), t.public_address.clone(), t.direct.clone()));
+    if let Some((id, address, direct)) = hosting {
         let (name, version) = crate::instances::load(state, &id).await.map(|i| (i.name, i.mc_version)).unwrap_or((id, String::new()));
-        return presence("hosting", format!("Ha aperto un mondo · {name}"), address, version);
+        let mut p = presence("hosting", format!("Ha aperto un mondo · {name}"), address, version);
+        p.join_direct = direct;
+        return p;
     }
     // Istanza in esecuzione?
     let running_id = state.running.lock().unwrap().keys().next().cloned();
@@ -259,7 +266,13 @@ pub async fn current_presence(state: &AppState) -> Presence {
             .await
             .map(|i| (i.name, i.mc_version))
             .unwrap_or(("In gioco".into(), String::new()));
-        let activity = state.activity.lock().unwrap().get(&id).cloned();
+        let mut activity = state.activity.lock().unwrap().get(&id).cloned();
+        // entrato con la connessione diretta: agli amici si mostra il tunnel, non l'IP di chi ospita
+        if let Some(Activity::Server(address)) = &activity {
+            if let Some(relay) = JOIN_ALIASES.lock().unwrap().get(address) {
+                activity = Some(Activity::Server(relay.clone()));
+            }
+        }
         return match activity {
             Some(Activity::Server(address)) if address.starts_with("bore.pub") => {
                 presence("server", format!("Nel mondo di un amico · {version}"), address, version)
@@ -285,7 +298,7 @@ pub async fn heartbeat(app: &AppHandle, state: &AppState) {
         state,
         reqwest::Method::POST,
         "/presence",
-        Some(json!({ "status": p.status, "detail": p.detail, "joinAddress": p.join_address, "mcVersion": p.mc_version })),
+        Some(json!({ "status": p.status, "detail": p.detail, "joinAddress": p.join_address, "joinDirect": p.join_direct, "mcVersion": p.mc_version })),
     )
     .await;
     // Il server risponde con il totale dei messaggi non letti: lo passiamo all'interfaccia.
@@ -375,7 +388,11 @@ pub async fn get_friends(state: State<'_, AppState>) -> Result<FriendsData> {
     match call(state.inner(), reqwest::Method::GET, "/friends", None).await {
         Ok(value) => Ok(FriendsData {
             configured: true,
-            friends: serde_json::from_value(value["friends"].clone()).unwrap_or_default(),
+            friends: {
+                let mut friends: Vec<FriendPresence> = serde_json::from_value(value["friends"].clone()).unwrap_or_default();
+                resolve_direct(&mut friends).await;
+                friends
+            },
             incoming: serde_json::from_value(value["incoming"].clone()).unwrap_or_default(),
             outgoing: serde_json::from_value(value["outgoing"].clone()).unwrap_or_default(),
             error: None,
@@ -480,8 +497,26 @@ pub async fn send_message_inner(state: &AppState, uuid: &str, text: &str) -> Res
 /// Lista amici con presenza (per la mod in gioco).
 pub async fn fetch_friends(state: &AppState) -> Result<Vec<FriendPresence>> {
     let value = call(state, reqwest::Method::GET, "/friends", None).await?;
-    Ok(serde_json::from_value(value["friends"].clone()).unwrap_or_default())
+    let mut friends: Vec<FriendPresence> = serde_json::from_value(value["friends"].clone()).unwrap_or_default();
+    resolve_direct(&mut friends).await;
+    Ok(friends)
 }
+
+async fn resolve_direct(friends: &mut [FriendPresence]) {
+    // Chi ospita pubblica anche gli indirizzi diretti: se uno risponde si entra da lì (veloce)
+    // invece che dal tunnel. Le prove sono in parallelo e restano in cache per qualche secondo.
+    let probes = friends.iter().map(|f| crate::direct::best(&f.join_direct));
+    let best = futures::future::join_all(probes).await;
+    for (friend, best) in friends.iter_mut().zip(best) {
+        if let Some(address) = best {
+            JOIN_ALIASES.lock().unwrap().insert(address.clone(), friend.join_address.clone());
+            friend.join_address = address;
+        }
+    }
+}
+
+/// Indirizzo diretto → indirizzo del tunnel dello stesso mondo (per la presenza di chi entra).
+static JOIN_ALIASES: std::sync::LazyLock<std::sync::Mutex<std::collections::HashMap<String, String>>> = std::sync::LazyLock::new(Default::default);
 
 /// Messaggi con un amico: gli ultimi 50, oppure solo quelli con id > `after` (per l'aggiornamento).
 /// Il server segna come letti quelli ricevuti.
